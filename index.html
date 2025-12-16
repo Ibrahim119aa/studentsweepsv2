@@ -26,6 +26,13 @@
             background-color: var(--bg-primary);
             color: var(--text-primary);
             overflow-x: hidden;
+            position: relative;
+            /* Background pattern on the right side - like Figma design */
+            background-image: url('images/homepage.jpg');
+            background-size: auto;
+            background-position: right top;
+            background-repeat: repeat-y;
+            background-attachment: fixed;
         }
 
         html {
@@ -350,28 +357,13 @@
             background-color: #d1fae5;
         }
 
+
         #main-content {
-            background-image: url('images/homepage.jpg');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
+            position: relative;
             min-height: calc(100vh - 200px);
         }
 
-        /* Optional: Add overlay for better text readability if needed */
-        #main-content::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255, 255, 255, 0.85);
-            z-index: 0;
-            pointer-events: none;
-        }
-
+        /* Ensure content is above background */
         #main-content > * {
             position: relative;
             z-index: 1;
