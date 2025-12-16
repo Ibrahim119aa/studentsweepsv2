@@ -240,6 +240,7 @@ window.SocketClient = (function() {
       context: error?.context || null,
       data: error?.data || null
     };
+    console.error(error);
     
     console.error('❌ [SocketClient] ========================================');
     console.error('❌ [SocketClient] CONNECTION ERROR!');
@@ -264,6 +265,7 @@ window.SocketClient = (function() {
     
     // Provide user-friendly error message
     if (window.showMessage) {
+      console.error()
       let userMessage = 'Unable to connect to server. ';
       if (error?.message === 'server error') {
         userMessage += 'The server is experiencing issues. Please try again in a moment.';
