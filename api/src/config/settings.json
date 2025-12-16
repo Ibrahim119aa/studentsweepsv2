@@ -1,0 +1,15 @@
+{
+  "siteName": "My Raffle",
+  "supportEmail": "support@example.com",
+  "currency": "USD",
+  "draw": {
+    "defaultEntries": 1,
+    "maxEntriesPerUser": 100,
+    "botChance": 0.05
+  },
+  "donation": {
+    "enabled": true,
+    "minAmount": 1
+  },
+  "primaryColor": "#00c853"
+}

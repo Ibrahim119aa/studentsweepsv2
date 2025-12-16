@@ -1,0 +1,2866 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-gray-50">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sweepstakes Admin Panel</title>
+    <!-- 1. Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 2. Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <!-- 3. Custom Styles -->
+    <style>
+        body,
+        html {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Custom scrollbar for aesthetics */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            /* gray-100 */
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            /* gray-400 */
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+            /* gray-500 */
+        }
+
+        .is-hidden {
+            display: none !important;
+        }
+
+        /* Login Modal Styles */
+        #admin-login-modal {
+            backdrop-filter: blur(4px);
+        }
+
+        #login-modal-content {
+            transform: scale(0.95);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #admin-login-modal[style*="display: flex"] #login-modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-gray-50 font-sans antialiased flex text-gray-800">
+    <!-- 
+      Sidebar (Static HTML Shell)
+      The content and active states will be updated by JavaScript
+    -->
+    <div id="sidebar" class="w-64 bg-white border-r shadow-xl flex flex-col fixed h-full z-10">
+        <div class="p-6 border-b">
+            <h1 id="sidebar-title" class="text-2xl font-black text-gray-900">Sweepstackz</h1>
+            <p id="sidebar-user" class="text-xs text-gray-500 mt-1 font-mono">Admin: ...</p>
+        </div>
+        <nav id="sidebar-nav" class="flex-grow p-4 space-y-2">
+            <!-- Nav items will be dynamically rendered here, but we can put static ones for the shell -->
+            <button onclick="handleSidebarNav('dashboard')" data-page="dashboard"
+                class="nav-item w-full flex items-center space-x-3 p-3 rounded-xl font-medium transition-colors duration-200 text-gray-600 hover:bg-gray-100">
+                <span id="icon-dashboard"></span> <span>Dashboard</span>
+            </button>
+            <button onclick="handleSidebarNav('prizes', 'list')" data-page="prizes"
+                class="nav-item w-full flex items-center space-x-3 p-3 rounded-xl font-medium transition-colors duration-200 text-gray-600 hover:bg-gray-100">
+                <span id="icon-prizes"></span> <span>Prize Management</span>
+            </button>
+            <button onclick="handleSidebarNav('draws')" data-page="draws"
+                class="nav-item w-full flex items-center space-x-3 p-3 rounded-xl font-medium transition-colors duration-200 text-gray-600 hover:bg-gray-100">
+                <span id="icon-draws"></span> <span>Draw Management</span>
+            </button>
+            <button onclick="handleSidebarNav('donations', 'list')" data-page="donations"
+                class="nav-item w-full flex items-center space-x-3 p-3 rounded-xl font-medium transition-colors duration-200 text-gray-600 hover:bg-gray-100">
+                <span id="icon-donations"></span> <span>Donation Causes</span>
+            </button>
+            <button onclick="handleSidebarNav('orders')" data-page="orders"
+                class="nav-item w-full flex items-center space-x-3 p-3 rounded-xl font-medium transition-colors duration-200 text-gray-600 hover:bg-gray-100">
+                <span id="icon-orders"></span> <span>Transaction Log</span>
+            </button>
+            <button onclick="handleSidebarNav('content')" data-page="content"
+                class="nav-item w-full flex items-center space-x-3 p-3 rounded-xl font-medium transition-colors duration-200 text-gray-600 hover:bg-gray-100">
+                <span id="icon-content"></span> <span>Static Content</span>
+            </button>
+            <button onclick="handleSidebarNav('settings')" data-page="settings"
+                class="nav-item w-full flex items-center space-x-3 p-3 rounded-xl font-medium transition-colors duration-200 text-gray-600 hover:bg-gray-100">
+                <span id="icon-settings"></span> <span>Site Settings</span>
+            </button>
+        </nav>
+        <div class="p-4 border-t">
+            <button id="logout-button" onclick="handleLogout()"
+                class="w-full flex items-center justify-center space-x-2 p-3 bg-red-500 text-white font-semibold rounded-lg shadow hover:bg-red-600 transition duration-150"
+                style="display: none;">
+                <span id="icon-logout"></span>
+                <span>Sign Out</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 
+      Main Content Area
+      This will be dynamically filled by JavaScript
+    -->
+    <div class="flex-grow ml-64 p-8">
+        <header class="mb-8 border-b pb-4">
+            <h2 id="page-title" class="text-4xl font-extrabold text-gray-900">Loading...</h2>
+            <p id="page-subtitle" class="text-gray-500 mt-1">Manage all sweepstakes data, settings, and content.</p>
+        </header>
+
+        <!-- Main content is rendered here -->
+        <main id="main-content">
+            <!-- Initial Loading Indicator (will be hidden by script) -->
+            <div id="loading-indicator" class="flex justify-center items-center h-64">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+                <p class="ml-4 text-gray-600">Loading data...</p>
+            </div>
+
+            <!-- Auth Error Message (no longer used) -->
+            <div id="auth-error" class="p-12 text-center bg-gray-100 rounded-xl shadow-lg mt-10" style="display: none;">
+                <h2 class="text-3xl font-bold text-red-600 mb-4">ADMIN ACCESS REQUIRED</h2>
+                <p class="text-lg text-gray-700">Please wait for automatic authentication via the canvas environment.
+                </p>
+                <p id="auth-error-message" class="text-sm text-gray-500 mt-2"></p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" style="position: fixed; top: 1rem; right: 1rem; z-index: 99999; pointer-events: none; display: flex; flex-direction: column; gap: 0.5rem; max-width: 400px;"></div>
+
+    <!-- Admin Login Modal -->
+    <div id="admin-login-modal" class="fixed inset-0 bg-black bg-opacity-50 z-[999999] flex items-center justify-center p-4" style="display: none;" onclick="if(event.target === this) hideLoginModal();">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-95 opacity-0" id="login-modal-content" onclick="event.stopPropagation();">
+            <div class="p-8">
+                <!-- Header -->
+                <div class="text-center mb-8">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full mb-4 shadow-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2">Admin Login</h2>
+                    <p class="text-gray-500 text-sm">Enter your credentials to access the admin panel</p>
+                </div>
+
+                <!-- Login Form -->
+                <form id="admin-login-form" onsubmit="handleAdminLogin(event)" class="space-y-5">
+                    <!-- Email Field -->
+                    <div>
+                        <label for="admin-email" class="block text-sm font-semibold text-gray-700 mb-2">
+                            Email Address
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                    <polyline points="22,6 12,13 2,6"></polyline>
+                                </svg>
+                            </div>
+                            <input 
+                                type="email" 
+                                id="admin-email" 
+                                name="email" 
+                                required 
+                                autocomplete="email"
+                                class="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 outline-none text-gray-900 placeholder-gray-400"
+                                placeholder="admin@example.com"
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Password Field -->
+                    <div>
+                        <label for="admin-password" class="block text-sm font-semibold text-gray-700 mb-2">
+                            Password
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                            </div>
+                            <input 
+                                type="password" 
+                                id="admin-password" 
+                                name="password" 
+                                required 
+                                autocomplete="current-password"
+                                class="w-full pl-10 pr-12 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 outline-none text-gray-900 placeholder-gray-400"
+                                placeholder="Enter your password"
+                            >
+                            <button 
+                                type="button" 
+                                onclick="togglePasswordVisibility()" 
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                <svg id="password-eye" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Error Message -->
+                    <div id="login-error" class="hidden bg-red-50 border-l-4 border-red-500 p-3 rounded">
+                        <p class="text-sm text-red-700 font-medium" id="login-error-text"></p>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button 
+                        type="submit" 
+                        id="login-submit-btn"
+                        class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <span id="login-btn-text">Sign In</span>
+                        <svg id="login-btn-spinner" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </button>
+                </form>
+
+                <!-- Footer -->
+                <div class="mt-6 text-center">
+                    <p class="text-xs text-gray-500">
+                        <svg class="inline-block w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        Secure admin access only
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Winner Assignment Modal -->
+    <div id="winner-modal" class="fixed inset-0 bg-black bg-opacity-50 z-[999998] flex items-center justify-center p-4" style="display: none;" onclick="if(event.target === this) hideWinnerModal();">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl transform transition-all duration-300 scale-95 opacity-0 max-h-[90vh] overflow-y-auto" id="winner-modal-content" onclick="event.stopPropagation();">
+            <div class="p-8">
+                <!-- Header -->
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900" id="winner-modal-title">Make Winner</h2>
+                    <button onclick="hideWinnerModal()" class="text-gray-400 hover:text-gray-600 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Form -->
+                <form id="winner-form" class="space-y-6">
+                    <input type="hidden" id="winner-user-id" />
+                    <input type="hidden" id="winner-id" />
+
+                    <!-- Image URL -->
+                    <div>
+                        <label for="winner-image-url" class="block text-sm font-semibold text-gray-700 mb-2">
+                            Winner Image URL *
+                        </label>
+                        <input 
+                            type="url" 
+                            id="winner-image-url" 
+                            required 
+                            placeholder="https://example.com/image.jpg"
+                            oninput="updateImagePreview()"
+                            class="w-full p-3 rounded-lg border-2 border-gray-200 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 outline-none text-gray-900 placeholder-gray-400"
+                        />
+                        <p class="text-xs text-gray-500 mt-1">Enter the URL of the winner's image</p>
+                    </div>
+
+                    <!-- Image Preview -->
+                    <div id="image-preview-container" style="display: none;">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Image Preview</label>
+                        <div class="border-2 border-gray-200 rounded-lg p-4 bg-gray-50">
+                            <img id="image-preview" src="" alt="Preview" class="max-w-full h-auto max-h-64 mx-auto rounded-lg shadow-md" onerror="this.style.display='none'; document.getElementById('image-preview-container').style.display='none';" />
+                        </div>
+                    </div>
+
+                    <!-- Prize Selection -->
+                    <div>
+                        <label for="winner-prize-select" class="block text-sm font-semibold text-gray-700 mb-2">
+                            Prize *
+                        </label>
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                id="winner-prize-search" 
+                                placeholder="Search prizes..."
+                                oninput="filterPrizes()"
+                                class="w-full p-3 rounded-lg border-2 border-gray-200 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 outline-none text-gray-900 placeholder-gray-400 mb-2"
+                            />
+                            <select 
+                                id="winner-prize-select" 
+                                required 
+                                size="5"
+                                onchange="showSelectedPrizeInfo()"
+                                class="w-full p-2 rounded-lg border-2 border-gray-200 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 outline-none text-gray-900"
+                            >
+                                <!-- Options will be populated dynamically -->
+                            </select>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Select the prize for this winner</p>
+                    </div>
+
+                    <!-- Selected Prize Info Preview -->
+                    <div id="selected-prize-info" style="display: none;" class="mt-4 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border-2 border-green-200">
+                        <div class="flex items-start space-x-3">
+                            <div class="flex-shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-600">
+                                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5h3a2.5 2.5 0 0 1 0 5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5h-3a2.5 2.5 0 0 0 0 5H18"/><path d="M4 22h16"/><path d="M10 14V5"/><path d="M14 14V5"/><path d="M12 22v-8h-2.5l-.5 4"/><path d="M12 22v-8h2.5l.5 4"/></svg>
+                            </div>
+                            <div class="flex-grow">
+                                <h4 class="text-sm font-bold text-gray-900 mb-1" id="selected-prize-title">Prize Title</h4>
+                                <p class="text-xs text-gray-600 leading-relaxed" id="selected-prize-description">Prize description will appear here when you select a prize.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label for="winner-description" class="block text-sm font-semibold text-gray-700 mb-2">
+                            Description (Optional)
+                        </label>
+                        <textarea 
+                            id="winner-description" 
+                            rows="3"
+                            placeholder="Enter a description for this winner..."
+                            class="w-full p-3 rounded-lg border-2 border-gray-200 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 outline-none text-gray-900 placeholder-gray-400"
+                        ></textarea>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex justify-end space-x-4 pt-4 border-t">
+                        <button 
+                            type="button" 
+                            onclick="hideWinnerModal()" 
+                            class="px-6 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400 transition"
+                        >
+                            Cancel
+                        </button>
+                        <button 
+                            type="submit" 
+                            class="px-6 py-2 text-white font-bold rounded-lg transition hover:opacity-90 flex items-center"
+                            id="winner-save-btn"
+                            style="background-color: #00C853"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                            <span>Save Winner</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Socket.IO Client Library -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+
+    <!-- 
+      JavaScript Application Logic 
+    -->
+    <script type="module">
+        const SOCKET_URL = 'http://localhost:5053';
+        // const SOCKET_URL = 'https://api.sweepstackz.com';
+        let socket = null;
+
+        // --- Icon Components (Return SVG strings) ---
+        const ICONS = {
+            LayoutGrid: () => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>`,
+            Gift: () => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>`,
+            Heart: () => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`,
+            FileText: () => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>`,
+            Settings: () => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.75 1.3a2 2 0 0 0 .25 2.57l.5.31a2 2 0 0 1 0 2.57l-.5.31a2 2 0 0 0-.25 2.57l.75 1.3a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.75-1.3a2 2 0 0 0-.25-2.57l-.5-.31a2 2 0 0 1 0-2.57l.5-.31a2 2 0 0 0 .25-2.57l-.75-1.3a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>`,
+            Users: () => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+            ShoppingCart: () => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="20" r="1"/><circle cx="19" cy="20" r="1"/><path d="M2.5 2.5h2l4 15h10l2-7H7.5"/><path d="M12 7H22l-1 5H9.5"/></svg>`,
+            Plus: () => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+            Edit: () => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>`,
+            Trash2: () => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`,
+            Save: () => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>`,
+            Palette: () => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.8 7.8a7.33 7.33 0 1 0 4.2 4.2l-3.5-3.5"/><path d="M6.3 15.7l-3.5 3.5a1.85 1.85 0 0 0 2.75 2.75l3.5-3.5"/><path d="M16 16l3.5-3.5a2.4 2.4 0 0 0 0-3.4l-3.4-3.4a2.4 2.4 0 0 0-3.4 0l-3.5 3.5"/><path d="M2 19.8l2-2"/><path d="M3 15l2 2"/></svg>`,
+            Clock: () => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+            DollarSign: () => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h1a3.5 3.5 0 0 1 0 7H6"/></svg>`,
+            Zap: () => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+            Trophy: () => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5h3a2.5 2.5 0 0 1 0 5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5h-3a2.5 2.5 0 0 0 0 5H18"/><path d="M4 22h16"/><path d="M10 14V5"/><path d="M14 14V5"/><path d="M12 22v-8h-2.5l-.5 4"/><path d="M12 22v-8h2.5l.5 4"/></svg>`,
+            Loader: () => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="animate-spin"><circle cx="12" cy="12" r="10" opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" opacity="0.75"/></svg>`,
+        };
+
+        // --- Global Application State ---
+        let state = {
+            currentPage: 'dashboard',
+            currentSubTab: null,
+            prizeToEditId: null,
+            donationToEditId: null,
+            contentToEditId: null,
+            user: null,
+            token: null,
+            loading: true,
+            isAuthenticated: false,
+            settings: { primaryColor: '#00C853' },
+            prizes: [],
+            donations: [],
+            transactions: [],
+            users: [],
+            winners: [],
+            socketConnected: false,
+            // Filter state for Draw Management
+            drawsFilter: {
+                search: '',
+                status: 'all' // 'all', 'winner', 'regular'
+            },
+        };
+
+        function setState(newState) {
+            // Merge new state into the old state
+            state = { ...state, ...newState };
+            // Log important state changes
+            if (newState.isAuthenticated) console.log('[STATE] Authenticated:', state.isAuthenticated);
+            if (newState.token) console.log('[STATE] Token updated');
+            if (newState.prizes !== undefined) console.log('[STATE] Prizes:', state.prizes.length, 'items');
+            if (newState.donations !== undefined) console.log('[STATE] Donations:', state.donations.length, 'items');
+            if (newState.transactions !== undefined) console.log('[STATE] Transactions:', state.transactions.length, 'items');
+            // Re-render the entire UI based on the new state
+            renderApp();
+        }
+
+        // --- Socket.IO Connection & Event Handlers ---
+        function initializeSocket() {
+            if (socket) return;
+
+            socket = io(SOCKET_URL, {
+                reconnection: true,
+                reconnectionDelay: 1000,
+                reconnectionDelayMax: 5000,
+                reconnectionAttempts: Infinity,
+                auth: state.token ? { token: state.token } : {},
+            });
+
+            // Connection events
+            socket.on('connect', () => {
+                console.log('[SOCKET] Connected successfully, ID:', socket.id);
+                setState({ socketConnected: true });
+                // If we have a token, we're authenticated (backend validates via middleware)
+                if (state.token) {
+                    console.log('[SOCKET] Token found, loading authenticated data...');
+                    setState({ isAuthenticated: true });
+                    loadPrizesData();
+                    loadDonationsData();
+                    loadOrdersData();
+                    loadUsersData();
+                    loadWinnersData();
+                }
+            });
+
+            socket.on('disconnect', () => {
+                console.log('[SOCKET] Disconnected');
+                setState({ socketConnected: false });
+            });
+
+            socket.on('error', (error) => {
+                // Handle both string errors and object errors
+                if (typeof error === 'string') {
+                    console.error('[SOCKET] Error:', error);
+                    authErrorMsgEl.textContent = `Connection error: ${error}`;
+                } else if (error && error.message) {
+                    console.error('[SOCKET] Error received:', error.message);
+                    if (error.details) {
+                        console.error('[SOCKET] Error details:', error.details);
+                    }
+                    alert(`Error: ${error.message}`);
+                } else {
+                    console.error('[SOCKET] Error:', error);
+                }
+            });
+
+            // Auth events
+            socket.on('admin:login:response', (response) => {
+                console.log('[SOCKET] admin:login:response received:', response);
+                
+                // Clear timeout if response received
+                if (window.loginTimeoutId) {
+                    clearTimeout(window.loginTimeoutId);
+                    window.loginTimeoutId = null;
+                }
+                
+                // Reset login button state
+                const submitBtn = document.getElementById('login-submit-btn');
+                const btnText = document.getElementById('login-btn-text');
+                const btnSpinner = document.getElementById('login-btn-spinner');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    if (btnText) btnText.textContent = 'Sign In';
+                    if (btnSpinner) btnSpinner.classList.add('hidden');
+                }
+                
+                if (response?.success && response?.user?.isAdmin) {
+                    const newToken = response.token;
+                    setState({
+                        isAuthenticated: true,
+                        token: newToken,
+                        user: response.user
+                    });
+                    localStorage.setItem('adminToken', newToken);
+                    console.log('[SOCKET] Login successful, token set:', newToken?.substring(0, 20) + '...');
+                    
+                    // Hide login modal and show success toast
+                    hideLoginModal();
+                    window.showToast('Login successful! Welcome back.', 'success');
+                    
+                    // Attach token to socket auth and reconnect so handshake contains token
+                    try {
+                        if (socket) {
+                            socket.auth = { token: newToken };
+                            // Force reconnect so backend sees token in handshake
+                            if (socket.connected) {
+                                socket.disconnect();
+                            }
+                            socket.connect();
+                            console.log('[SOCKET] Reconnected socket with auth token in handshake');
+                        }
+                    } catch (e) {
+                        console.warn('[SOCKET] Failed to set socket.auth and reconnect:', e?.message || e);
+                    }
+                    // Also trigger data loads (handlers/listeners will set state on responses)
+                    console.log('[SOCKET] Triggering data loads after login...');
+                    loadPrizesData();
+                    loadDonationsData();
+                    loadOrdersData();
+                    loadUsersData();
+                    loadWinnersData();
+                } else {
+                    console.warn('[SOCKET] Login failed:', response?.message);
+                    const errorMsg = response?.message || 'Invalid credentials';
+                    showLoginError(errorMsg);
+                    window.showToast('Login failed: ' + errorMsg, 'error');
+                    setState({ isAuthenticated: false });
+                }
+            });
+
+            // Prize events
+            socket.on('prizes:list:response', (response) => {
+                console.log('[SOCKET] prizes:list:response:', response);
+                if (response?.success && Array.isArray(response.prizes)) {
+                    console.log('[SOCKET] Loaded', response.prizes.length, 'prizes');
+                    setState({ prizes: response.prizes });
+                } else {
+                    console.warn('[SOCKET] Failed to load prizes:', response?.message);
+                }
+            });
+
+            socket.on('prizes:new', (data) => {
+                console.log('[SOCKET] prizes:new broadcast:', data);
+                if (data?.success && data?.prize) {
+                    window.showToast("Prize created successfully!", 'success');
+                    loadPrizesData();
+                }
+            });
+
+            socket.on('prizes:update', (data) => {
+                console.log('[SOCKET] prizes:update broadcast:', data);
+                if (data?.success && data?.prize) {
+                    window.showToast("Prize updated successfully!", 'success');
+                    loadPrizesData();
+                }
+            });
+
+            socket.on('prizes:delete', (data) => {
+                console.log('[SOCKET] prizes:delete broadcast:', data);
+                if (data?.success && data?.prizeId) {
+                    window.showToast("Prize deleted successfully!", 'success');
+                    loadPrizesData();
+                }
+            });
+
+            // Orders events
+            socket.on('orders:list:response', (response) => {
+                console.log('[SOCKET] orders:list:response:', response);
+                if (response?.success && Array.isArray(response.orders)) {
+                    console.log('[SOCKET] Loaded', response.orders.length, 'orders');
+                    setState({ transactions: response.orders });
+                } else {
+                    console.warn('[SOCKET] Failed to load orders:', response?.message);
+                }
+            });
+
+            // Donation events
+            socket.on('donations:list:response', (response) => {
+                console.log('[SOCKET] donations:list:response:', response);
+                if (response?.success && Array.isArray(response.donations)) {
+                    console.log('[SOCKET] Loaded', response.donations.length, 'donations');
+                    setState({ donations: response.donations });
+                } else {
+                    console.warn('[SOCKET] Failed to load donations:', response?.message);
+                }
+            });
+
+            socket.on('donations:new', (data) => {
+                console.log('[SOCKET] donations:new broadcast:', data);
+                if (data?.success && data?.donation) {
+                    window.showToast("Donation cause created successfully!", 'success');
+                    loadDonationsData();
+                }
+            });
+
+            socket.on('donations:update', (data) => {
+                console.log('[SOCKET] donations:update broadcast:', data);
+                if (data?.success && data?.donation) {
+                    window.showToast("Donation cause updated successfully!", 'success');
+                    loadDonationsData();
+                }
+            });
+
+            socket.on('donations:delete', (data) => {
+                console.log('[SOCKET] donations:delete broadcast:', data);
+                if (data?.success && data?.donationId) {
+                    window.showToast("Donation cause deleted successfully!", 'success');
+                    loadDonationsData();
+                }
+            });
+
+            // Draw events
+            socket.on('draw:result', (data) => {
+                console.log('Draw result received:', data);
+                if (data?.success) {
+                    const winnerName = data.winner?.user?.fullName || data.winner?.user?.name || 'User';
+                    window.showToast(`Draw completed! Winner: ${winnerName}`, 'success');
+                    loadPrizesData();
+                    // Reload transactions to get winner info
+                    if (typeof loadOrdersData === 'function') {
+                        loadOrdersData();
+                    }
+                }
+            });
+            // Broadcast events
+            socket.on('orders:new', (data) => {
+                console.log('New order:', data);
+                loadOrdersData();
+            });
+
+            // Users events
+            socket.on('users:list:response', (response) => {
+                console.log('[SOCKET] users:list:response:', response);
+                if (response?.success && Array.isArray(response.users)) {
+                    console.log('[SOCKET] Loaded', response.users.length, 'users');
+                    setState({ users: response.users });
+                } else {
+                    console.warn('[SOCKET] Failed to load users:', response?.message);
+                }
+            });
+
+            // Winners events
+            socket.on('winners:all:response', (response) => {
+                console.log('[SOCKET] winners:all:response:', response);
+                if (response?.success && Array.isArray(response.winners)) {
+                    console.log('[SOCKET] Loaded', response.winners.length, 'winners');
+                    setState({ winners: response.winners });
+                } else {
+                    console.warn('[SOCKET] Failed to load winners:', response?.message);
+                }
+            });
+
+            socket.on('winner:assign:response', (response) => {
+                console.log('[SOCKET] winner:assign:response:', response);
+                const saveBtn = document.getElementById('winner-save-btn');
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.style.opacity = '1';
+                    saveBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg><span>Save Winner</span>`;
+                }
+                
+                if (response?.success) {
+                    window.showToast('Winner assigned successfully!', 'success');
+                    loadUsersData();
+                    loadWinnersData();
+                    loadPrizesData();
+                    hideWinnerModal();
+                } else {
+                    window.showToast('Failed to assign winner: ' + (response?.message || 'Unknown error'), 'error');
+                }
+            });
+
+            socket.on('winner:update:response', (response) => {
+                console.log('[SOCKET] winner:update:response:', response);
+                const saveBtn = document.getElementById('winner-save-btn');
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.style.opacity = '1';
+                    saveBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg><span>Save Winner</span>`;
+                }
+                
+                if (response?.success) {
+                    window.showToast('Winner updated successfully!', 'success');
+                    loadUsersData();
+                    loadWinnersData();
+                    loadPrizesData();
+                    hideWinnerModal();
+                } else {
+                    window.showToast('Failed to update winner: ' + (response?.message || 'Unknown error'), 'error');
+                }
+            });
+
+            socket.on('winner:assigned', (data) => {
+                console.log('[SOCKET] winner:assigned broadcast:', data);
+                loadWinnersData();
+                loadUsersData();
+            });
+
+            socket.on('winner:updated', (data) => {
+                console.log('[SOCKET] winner:updated broadcast:', data);
+                loadWinnersData();
+                loadUsersData();
+            });
+
+            socket.on('winner:delete:response', (response) => {
+                console.log('[SOCKET] winner:delete:response:', response);
+                if (response?.success) {
+                    window.showToast('Winner unassigned successfully!', 'success');
+                    loadUsersData();
+                    loadWinnersData();
+                    loadPrizesData();
+                } else {
+                    window.showToast('Failed to unassign winner: ' + (response?.message || 'Unknown error'), 'error');
+                }
+            });
+
+            socket.on('winner:deleted', (data) => {
+                console.log('[SOCKET] winner:deleted broadcast:', data);
+                loadWinnersData();
+                loadUsersData();
+                loadPrizesData();
+            });
+        }
+
+        function loadPrizesData() {
+            if (socket) {
+                console.log('[SOCKET] Emitting prizes:list event');
+                socket.emit('prizes:list', {}, (response) => {
+                    console.log('[SOCKET] prizes:list callback response:', response);
+                });
+            } else {
+                console.warn('[SOCKET] Socket not initialized');
+            }
+        }
+
+        function loadDonationsData() {
+            if (socket) {
+                console.log('[SOCKET] Emitting donations:list event');
+                socket.emit('donations:list', {}, (response) => {
+                    console.log('[SOCKET] donations:list callback response:', response);
+                });
+            } else {
+                console.warn('[SOCKET] Socket not initialized');
+            }
+        }
+
+        function loadOrdersData() {
+            if (socket) {
+                console.log('[SOCKET] Emitting orders:list event, token:', state.token?.substring(0, 20) + '...');
+                // Send empty object - token is already in socket.handshake.auth.token
+                socket.emit('orders:list', {}, (response) => {
+                    console.log('[SOCKET] orders:list callback response:', response);
+                });
+            } else {
+                console.warn('[SOCKET] Socket not initialized, cannot load orders');
+            }
+        }
+
+        function loadUsersData() {
+            if (socket) {
+                console.log('[SOCKET] Emitting users:list event');
+                socket.emit('users:list', {}, (response) => {
+                    console.log('[SOCKET] users:list callback response:', response);
+                });
+            } else {
+                console.warn('[SOCKET] Socket not initialized, cannot load users');
+            }
+        }
+
+        function loadWinnersData() {
+            if (socket) {
+                console.log('[SOCKET] Emitting winners:all event');
+                socket.emit('winners:all', {}, (response) => {
+                    console.log('[SOCKET] winners:all callback response:', response);
+                });
+            } else {
+                console.warn('[SOCKET] Socket not initialized, cannot load winners');
+            }
+        }
+
+        // --- DOM Selectors ---
+        const mainContentEl = document.getElementById('main-content');
+        const pageTitleEl = document.getElementById('page-title');
+        const pageSubtitleEl = document.getElementById('page-subtitle');
+        const sidebarUserEl = document.getElementById('sidebar-user');
+        const sidebarNavEl = document.getElementById('sidebar-nav');
+        const loadingEl = document.getElementById('loading-indicator');
+        const authErrorEl = document.getElementById('auth-error');
+        const authErrorMsgEl = document.getElementById('auth-error-message');
+        const logoutButtonEl = document.getElementById('logout-button');
+
+        // --- Reusable UI Components ---
+        const LoadingIndicator = () => `
+            <div class="flex justify-center items-center h-64">
+              <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+              <p class="ml-4 text-gray-600">Loading data...</p>
+            </div>
+        `;
+
+        const NoDataMessage = ({ item, action }) => `
+            <div class="p-8 text-center bg-gray-50 border border-dashed rounded-xl text-gray-500">
+                <p class="font-semibold text-lg">No ${item} found.</p>
+                <p class="mt-2">Click the "${action}" button to create your first one.</p>
+            </div>
+        `;
+
+        // --- Toast Notification System ---
+        window.showToast = function (message, type = 'success') {
+            console.log('[TOAST] Function called with:', { message, type });
+            
+            // Ensure body exists
+            if (!document.body) {
+                console.error('[TOAST] Document body not ready');
+                alert(message);
+                return;
+            }
+
+            try {
+                // Get or create toast container
+                let toastContainer = document.getElementById('toast-container');
+                
+                if (!toastContainer) {
+                    console.log('[TOAST] Creating toast container');
+                    toastContainer = document.createElement('div');
+                    toastContainer.id = 'toast-container';
+                    document.body.appendChild(toastContainer);
+                }
+                
+                // Ensure container is in body
+                if (toastContainer.parentElement !== document.body) {
+                    console.log('[TOAST] Moving container to body');
+                    document.body.appendChild(toastContainer);
+                }
+
+                // Force container styles
+                Object.assign(toastContainer.style, {
+                    position: 'fixed',
+                    top: '16px',
+                    right: '16px',
+                    zIndex: '999999',
+                    pointerEvents: 'none',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    maxWidth: '400px',
+                    width: 'auto'
+                });
+
+                // Create toast element
+                const toastId = 'toast-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+                const bgColor = type === 'success' ? '#10b981' : '#ef4444';
+                const icon = type === 'success'
+                    ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>'
+                    : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+
+                const toast = document.createElement('div');
+                toast.id = toastId;
+                
+                // Set toast styles
+                Object.assign(toast.style, {
+                    backgroundColor: bgColor,
+                    color: 'white',
+                    padding: '16px 20px',
+                    borderRadius: '8px',
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    minWidth: '300px',
+                    maxWidth: '400px',
+                    pointerEvents: 'auto',
+                    position: 'relative',
+                    transform: 'translateX(400px)',
+                    opacity: '0',
+                    transition: 'all 0.3s ease-in-out',
+                    zIndex: '1000000'
+                });
+                
+                toast.innerHTML = `
+                    <div style="flex-shrink: 0; display: flex; align-items: center; justify-content: center;">${icon}</div>
+                    <p style="flex: 1; margin: 0; font-weight: 500; font-size: 14px; line-height: 1.5;">${message}</p>
+                    <button onclick="(function(){const el=document.getElementById('${toastId}');if(el){el.style.transform='translateX(400px)';el.style.opacity='0';setTimeout(()=>el.remove(),300);}})();" style="flex-shrink: 0; background: none; border: none; color: white; cursor: pointer; padding: 4px; display: flex; align-items: center; opacity: 0.8;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                `;
+
+                // Append to container
+                toastContainer.appendChild(toast);
+                console.log('[TOAST] Toast appended. Container visible:', toastContainer.offsetParent !== null);
+                console.log('[TOAST] Container position:', {
+                    top: toastContainer.style.top,
+                    right: toastContainer.style.right,
+                    zIndex: toastContainer.style.zIndex,
+                    display: toastContainer.style.display
+                });
+
+                // Force reflow
+                void toast.offsetHeight;
+                void toastContainer.offsetHeight;
+
+                // Make visible immediately (no animation delay for testing)
+                setTimeout(() => {
+                    toast.style.transform = 'translateX(0)';
+                    toast.style.opacity = '1';
+                    console.log('[TOAST] Toast made visible. Styles:', {
+                        transform: toast.style.transform,
+                        opacity: toast.style.opacity,
+                        backgroundColor: toast.style.backgroundColor,
+                        display: toast.style.display,
+                        zIndex: toast.style.zIndex
+                    });
+                    console.log('[TOAST] Toast element:', toast);
+                    console.log('[TOAST] Toast container:', toastContainer);
+                    console.log('[TOAST] Toast in DOM:', document.body.contains(toast));
+                }, 50);
+
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.style.transform = 'translateX(400px)';
+                        toast.style.opacity = '0';
+                        setTimeout(() => {
+                            if (toast.parentNode) {
+                                toast.remove();
+                            }
+                        }, 300);
+                    }
+                }, 5000);
+            } catch (error) {
+                console.error('[TOAST] Error:', error);
+                alert(message);
+            }
+        };
+
+        // --- Main Render Function ---
+        // This function updates the DOM based on the current state
+        function renderApp() {
+            // Preserve toast container and all existing toasts during re-renders
+            const existingToastContainer = document.getElementById('toast-container');
+            let preservedToasts = [];
+            if (existingToastContainer) {
+                // Save all existing toast elements
+                preservedToasts = Array.from(existingToastContainer.children);
+                const toastContainerParent = existingToastContainer.parentElement;
+            }
+
+            // Check authentication
+            if (!state.isAuthenticated) {
+                console.log('[RENDER] Not authenticated, showing login prompt');
+                authErrorEl.style.display = 'block';
+                authErrorMsgEl.textContent = state.socketConnected ? 'Awaiting admin login...' : 'Connecting to server...';
+                logoutButtonEl.style.display = 'none';
+                mainContentEl.innerHTML = LoadingIndicator();
+                // Restore toast container if it was removed
+                if (existingToastContainer && !existingToastContainer.parentElement && document.body) {
+                    document.body.appendChild(existingToastContainer);
+                    // Restore preserved toasts
+                    preservedToasts.forEach(toast => {
+                        if (!existingToastContainer.contains(toast)) {
+                            existingToastContainer.appendChild(toast);
+                        }
+                    });
+                }
+                return;
+            }
+
+            // Show content
+            console.log('[RENDER] Rendering authenticated dashboard, page:', state.currentPage);
+            loadingEl.style.display = 'none';
+            authErrorEl.style.display = 'none';
+            logoutButtonEl.style.display = 'flex';
+            sidebarUserEl.textContent = `Admin: ${state.user?.emailAddress || state.user?.email || 'Admin'}`;
+
+            const primaryColor = state.settings.primaryColor || '#00C853';
+
+            // Restore toast container if it was removed during render
+            if (existingToastContainer && !existingToastContainer.parentElement && document.body) {
+                document.body.appendChild(existingToastContainer);
+                // Restore preserved toasts
+                preservedToasts.forEach(toast => {
+                    if (!existingToastContainer.contains(toast)) {
+                        existingToastContainer.appendChild(toast);
+                    }
+                });
+            } else if (existingToastContainer && preservedToasts.length > 0) {
+                // Ensure all preserved toasts are still in the container
+                preservedToasts.forEach(toast => {
+                    if (!existingToastContainer.contains(toast) && toast.parentElement === null) {
+                        existingToastContainer.appendChild(toast);
+                    }
+                });
+            }
+
+            // --- Render Page Content ---
+            let contentHtml = '';
+            switch (state.currentPage) {
+                case 'dashboard':
+                    contentHtml = renderDashboard();
+                    break;
+                case 'prizes':
+                    contentHtml = renderPrizesPage();
+                    break;
+                case 'draws':
+                    contentHtml = renderDrawManagement();
+                    break;
+                case 'donations':
+                    contentHtml = renderDonationsPage();
+                    break;
+                case 'content':
+                    contentHtml = renderContentManager();
+                    break;
+                case 'settings':
+                    contentHtml = renderSiteSettings();
+                    break;
+                case 'orders':
+                    contentHtml = renderOrders();
+                    break;
+                default:
+                    contentHtml = renderDashboard();
+            }
+            mainContentEl.innerHTML = contentHtml;
+
+            // CRITICAL: Ensure toast container is always present and never removed
+            let finalToastContainer = document.getElementById('toast-container');
+            if (!finalToastContainer && document.body) {
+                finalToastContainer = document.createElement('div');
+                finalToastContainer.id = 'toast-container';
+                Object.assign(finalToastContainer.style, {
+                    position: 'fixed',
+                    top: '16px',
+                    right: '16px',
+                    zIndex: '999999',
+                    pointerEvents: 'none',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    maxWidth: '400px'
+                });
+                document.body.appendChild(finalToastContainer);
+                console.log('[RENDER] Recreated toast container after render');
+            } else if (finalToastContainer) {
+                // Ensure it's in body and has correct styles
+                if (finalToastContainer.parentElement !== document.body && document.body) {
+                    document.body.appendChild(finalToastContainer);
+                    console.log('[RENDER] Re-attached toast container after render');
+                }
+                // Force styles
+                Object.assign(finalToastContainer.style, {
+                    position: 'fixed',
+                    top: '16px',
+                    right: '16px',
+                    zIndex: '999999',
+                    pointerEvents: 'none',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    maxWidth: '400px'
+                });
+            }
+
+            // --- Update Sidebar Active State ---
+            document.querySelectorAll('.nav-item').forEach(item => {
+                const page = item.getAttribute('data-page');
+                if (page === state.currentPage) {
+                    item.classList.add('bg-gray-100', 'text-gray-900', 'border', 'border-gray-200', 'shadow-sm');
+                    item.style.borderLeft = `4px solid ${primaryColor}`;
+                    item.style.color = primaryColor;
+                    item.querySelector('span:first-child').style.color = primaryColor;
+                } else {
+                    item.classList.remove('bg-gray-100', 'text-gray-900', 'border', 'border-gray-200', 'shadow-sm');
+                    item.style.borderLeft = 'none';
+                    item.style.color = 'inherit';
+                    item.querySelector('span:first-child').style.color = 'inherit';
+                }
+            });
+
+            // --- Update Page Title ---
+            const navItems = {
+                dashboard: 'Dashboard',
+                prizes: 'Prize Management',
+                draws: 'Draw Management',
+                donations: 'Donation Causes',
+                orders: 'Transaction Log',
+                content: 'Static Content',
+                settings: 'Site Settings',
+            };
+            const baseTitle = navItems[state.currentPage] || 'Dashboard';
+            if (state.currentSubTab === 'new') {
+                pageTitleEl.textContent = `New ${baseTitle.split(' ')[0]}`;
+            } else if (state.currentSubTab === 'edit') {
+                pageTitleEl.textContent = `Edit ${baseTitle.split(' ')[0]}`;
+            } else {
+                pageTitleEl.textContent = baseTitle;
+            }
+
+            // Attach form submission handlers if forms are rendered
+            // This is safer than inline onsubmit for complex forms
+            if (state.currentPage === 'prizes' && (state.currentSubTab === 'new' || state.currentSubTab === 'edit')) {
+                document.getElementById('prize-form').addEventListener('submit', handleSavePrize);
+            }
+            if (state.currentPage === 'donations' && (state.currentSubTab === 'new' || state.currentSubTab === 'edit')) {
+                document.getElementById('donation-form').addEventListener('submit', handleSaveDonation);
+            }
+            if (state.currentPage === 'settings') {
+                document.getElementById('settings-form').addEventListener('submit', handleSaveSettings);
+            }
+            if (state.currentPage === 'content' && state.currentSubTab) {
+                document.getElementById('content-form').addEventListener('submit', handleSaveContent);
+            }
+        }
+
+        // --- Page Rendering Functions ---
+
+        function renderDashboard() {
+            const { prizes, donations, transactions, settings } = state;
+            const primaryColor = settings.primaryColor || '#00C853';
+
+            const totalPrizes = prizes.length;
+            const activePrizes = prizes.filter(p => p.status !== 'drawn' && (p.drawTimestamp || 0) > Date.now()).length;
+            const totalDonationGoal = donations.reduce((sum, d) => sum + (d.goal || 0), 0);
+            const totalDonationRaised = donations.reduce((sum, d) => sum + (d.raised || 0), 0);
+
+            // Calculate real stats from actual data
+            const totalOrders = transactions.length;
+            // Get unique users from transactions
+            const uniqueUserIds = new Set(transactions.map(t => t.user?._id || t.user?.toString()).filter(Boolean));
+            const totalUsers = uniqueUserIds.size;
+
+            console.log('[RENDER] Dashboard stats:', { totalPrizes, activePrizes, totalOrders, totalUsers, totalDonationRaised });
+
+            const recentOrders = transactions.slice(0, 5).map(t => ({
+                id: t.trxID,
+                user: t.user?.fullName || 'User',
+                amount: t.order?.entries?.totalCost ? (t.order.entries.totalCost / 100).toFixed(2) : '0.00'
+            }));
+
+            return `
+                <div class="space-y-8">
+                    <div class="grid md:grid-cols-4 gap-6">
+                        <div class="p-6 bg-white rounded-xl shadow-lg border border-b-4" style="border-bottom-color: ${primaryColor}"><h3 class="text-sm font-semibold uppercase text-gray-500 mb-2">Active Prizes</h3><p class="text-3xl font-bold" style="color: ${primaryColor}">${activePrizes}</p><p class="text-xs text-gray-500 mt-1">Total: ${totalPrizes}</p></div>
+                        <div class="p-6 bg-white rounded-xl shadow-lg border border-b-4 border-green-400"><h3 class="text-sm font-semibold uppercase text-gray-500 mb-2">Total Funds Raised</h3><p class="text-3xl font-bold text-green-600">£${(totalDonationRaised || 0).toLocaleString()}</p><p class="text-xs text-gray-500 mt-1">Goal: £${totalDonationGoal.toLocaleString()}</p></div>
+                        <div class="p-6 bg-white rounded-xl shadow-lg border border-b-4 border-yellow-400"><h3 class="text-sm font-semibold uppercase text-gray-500 mb-2">Total Transactions</h3><p class="text-3xl font-bold text-yellow-600">${totalOrders.toLocaleString()}</p><p class="text-xs text-gray-500 mt-1">Completed orders</p></div>
+                        <div class="p-6 bg-white rounded-xl shadow-lg border border-b-4 border-purple-400"><h3 class="text-sm font-semibold uppercase text-gray-500 mb-2">Registered Users</h3><p class="text-3xl font-bold text-purple-600">${totalUsers.toLocaleString()}</p><p class="text-xs text-gray-500 mt-1">Unique users who participated</p></div>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="bg-white p-6 rounded-xl shadow-lg border">
+                            <h3 class="text-xl font-bold border-b pb-3 mb-4 flex items-center">${ICONS.Clock()} <span class="ml-2" style="color: ${primaryColor}">Upcoming Draw Dates</span></h3>
+                            <ul class="space-y-3">
+                                ${prizes.filter(p => p.status !== 'drawn' && p.drawTimestamp && p.drawTimestamp > Date.now()).slice(0, 5).map(p => `
+                                    <li class="flex justify-between items-center text-sm border-b pb-1 last:border-b-0">
+                                        <span class="font-medium text-gray-700">${p.name}</span>
+                                        <span class="text-xs text-gray-500">${p.drawTimestamp ? new Date(p.drawTimestamp).toLocaleDateString() : 'N/A'}</span>
+                                    </li>
+                                `).join('') || `<li class="text-gray-500">No upcoming draws.</li>`}
+                            </ul>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-lg border">
+                            <h3 class="text-xl font-bold border-b pb-3 mb-4 flex items-center">${ICONS.ShoppingCart()} <span class="ml-2 text-yellow-600">Recent Transactions</span></h3>
+                             <ul class="space-y-3">
+                                ${recentOrders.map(order => `
+                                     <li class="flex justify-between items-center text-sm border-b pb-1 last:border-b-0">
+                                        <span class="font-medium text-gray-700">${order.user}</span>
+                                        <span class="text-xs text-yellow-600 font-bold">£${order.amount}</span>
+                                    </li>
+                                `).join('') || `<li class="text-gray-500">No recent orders.</li>`}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderPrizesPage() {
+            if (state.currentSubTab === 'new' || (state.currentSubTab === 'edit' && state.prizeToEditId)) {
+                const prize = state.currentSubTab === 'edit'
+                    ? state.prizes.find(p => p._id === state.prizeToEditId)
+                    : null;
+                return renderPrizeForm(prize);
+            }
+            return renderPrizeList();
+        }
+
+        function renderPrizeList() {
+            const { prizes, settings } = state;
+            const primaryColor = settings.primaryColor || '#00C853';
+
+            return `
+                <div class="space-y-6">
+                    <div class="flex justify-between items-center">
+                         <h2 class="text-2xl font-bold">Manage Sweepstakes Prizes (${prizes.length})</h2>
+                        <button onclick="handleViewChange('prizes', 'new')" class="px-4 py-2 text-white font-semibold rounded-lg shadow-md hover:opacity-90 flex items-center" style="background-color: ${primaryColor}">
+                            ${ICONS.Plus()} <span class="ml-2">New Prize</span>
+                        </button>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-lg border overflow-x-auto">
+                         <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="py-3 px-4 text-left text-xs font-semibold uppercase text-gray-600">Prize</th>
+                                    <th class="py-3 px-4 text-left text-xs font-semibold uppercase text-gray-600">Value</th>
+                                    <th class="py-3 px-4 text-center text-xs font-semibold uppercase text-gray-600">Entries</th>
+                                    <th class="py-3 px-4 text-center text-xs font-semibold uppercase text-gray-600">Draw Date</th>
+                                    <th class="py-3 px-4 text-right text-xs font-semibold uppercase text-gray-600">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                ${prizes.length === 0 ? `<tr><td colSpan="5" class="py-6">${NoDataMessage({ item: "Prizes", action: "New Prize" })}</td></tr>` :
+                    prizes.map(p => {
+                        const entriesSold = p.entries?.totalEntries || 0;
+                        const maxEntries = p.entries?.maxEntries || 0;
+
+                        return `
+                                            <tr key="${p._id}" class="hover:bg-gray-50">
+                                                <td class="py-3 px-4 text-sm font-medium text-gray-900">${p.name}</td>
+                                                <td class="py-3 px-4 text-sm text-gray-600">£${entriesSold * (p.entries?.entryPrice || 0)}</td>
+                                                <td class="py-3 px-4 text-sm text-center">${entriesSold.toLocaleString()}/${maxEntries.toLocaleString()}</td>
+                                                <td class="py-3 px-4 text-sm text-center">${p.drawTimestamp ? new Date(p.drawTimestamp).toLocaleDateString() : 'N/A'}</td>
+                                                <td class="py-3 px-4 text-right">
+                                                    <div class="flex items-center justify-end space-x-2">
+                                                        <button onclick="handleViewChange('prizes', 'edit', '${p._id}')" class="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50" title="Edit Prize">${ICONS.Edit()}</button>
+                                                        <button onclick="handleDeleteItem('prizes', '${p._id}')" class="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50" title="Delete Prize">${ICONS.Trash2()}</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        `;
+                    }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderPrizeForm(prizeToEdit) {
+            const { settings } = state;
+            const primaryColor = settings.primaryColor || '#00C853';
+            const isEdit = !!prizeToEdit;
+
+            const f = {
+                id: prizeToEdit?._id || '',
+                name: prizeToEdit?.name || '',
+                subtitle: prizeToEdit?.shortDescription || '',
+                drawDate: prizeToEdit?.drawTimestamp ? new Date(prizeToEdit.drawTimestamp).toISOString().substring(0, 16) : '',
+                entryPrice: prizeToEdit?.entries?.entryPrice || 10,
+                entries: prizeToEdit?.entries?.totalEntries || 0,
+                maxEntries: prizeToEdit?.entries?.maxEntries || 10000,
+                entryOptions: (prizeToEdit?.entries?.minEntriesOrder || [5, 10, 50, 100]).join(', '),
+                thumbnail: prizeToEdit?.thumbnail || 'https://placehold.co/400x200/5c378e/ffffff?text=Prize+Thumb',
+                previewImages: prizeToEdit?.previewImages || [],
+            };
+
+            // Generate HTML for existing preview images
+            const previewImagesHtml = f.previewImages.map((url) => `
+                <div class="flex items-center space-x-2 preview-image-field">
+                    <input type="url" name="previewImages" value="${url}" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300" placeholder="https://..."/>
+                    <button type="button" onclick="removePreviewImageField(this)" class="p-3 bg-red-500 text-white rounded-lg hover:bg-red-600 flex-shrink-0">
+                        ${ICONS.Trash2()}
+                    </button>
+                </div>
+            `).join('');
+
+            return `
+                <div class="bg-white p-6 rounded-xl shadow-lg border" style="border-left: 8px solid ${primaryColor}">
+                    <h2 class="text-2xl font-bold border-b pb-3 mb-6" style="color: ${primaryColor}">${isEdit ? `Edit Prize: ${prizeToEdit.name}` : 'Create New Prize'}</h2>
+                    <form id="prize-form" class="space-y-6">
+                        <!-- Hidden ID for editing -->
+                        <input type="hidden" name="id" value="${f.id}">
+                        <input type="hidden" name="isEdit" value="${isEdit}">
+                        
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div><label class="block text-sm font-medium mb-1">Prize Name *</label><input type="text" name="name" value="${f.name}" required class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300"/></div>
+                            <div><label class="block text-sm font-medium mb-1">Subtitle / Short Description</label><input type="text" name="subtitle" value="${f.subtitle}" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300"/></div>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div><label class="block text-sm font-medium mb-1">Draw Date *</label><input type="datetime-local" name="drawDate" value="${f.drawDate}" required class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300"/></div>
+                            <div><label class="block text-sm font-medium mb-1">Entry Price (£) *</label><input type="number" name="entryPrice" value="${f.entryPrice}" required min="1" step="0.01" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300"/></div>
+                        </div>
+                        <div class="grid md:grid-cols-3 gap-6">
+                            <div><label class="block text-sm font-medium mb-1">Current Entries Sold</label><input type="number" name="entries" value="${f.entries}" required min="0" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300" readonly/></div>
+                            <div><label class="block text-sm font-medium mb-1">Max Entries Cap</label><input type="number" name="maxEntries" value="${f.maxEntries}" required min="100" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300"/></div>
+                            <div><label class="block text-sm font-medium mb-1">Entry Options (Comma Separated)</label><input type="text" name="entryOptions" value="${f.entryOptions}" required class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300" placeholder="e.g., 5, 10, 50, 100"/></div>
+                        </div>
+
+                        <!-- IMAGE SECTION -->
+                        <div class="space-y-4 p-4 border rounded-lg bg-gray-50">
+                            <h4 class="font-semibold text-gray-700">Prize Imagery</h4>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Thumbnail URL (400x200)</label>
+                                <input type="url" name="thumbnail" value="${f.thumbnail}" class="w-full p-3 rounded-lg bg-white border border-gray-300"/>
+                            </div>
+
+                            <!-- PREVIEW IMAGES SECTION -->
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Preview Images (Stackable)</label>
+                                <div id="preview-images-container" class="space-y-2">
+                                    ${previewImagesHtml}
+                                </div>
+                                <button type="button" onclick="addPreviewImageField()" class="mt-3 px-4 py-2 bg-blue-500 text-white text-sm font-semibold rounded-lg shadow-md hover:bg-blue-600 flex items-center">
+                                    ${ICONS.Plus()} <span class="ml-2">Add Preview Image</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end space-x-4 pt-6 border-t">
+                            <button type="button" onclick="handleViewChange('prizes', 'list')" class="px-6 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400">Cancel</button>
+                            <button type="submit" id="save-button" class="px-6 py-2 text-white font-bold rounded-lg transition hover:opacity-90" style="background-color: ${primaryColor}">
+                                ${ICONS.Save()} <span class="ml-2">${isEdit ? 'Update Prize' : 'Create Prize'}</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+        }
+
+        function renderDrawManagement() {
+            const { users, winners, settings, drawsFilter } = state;
+            const primaryColor = settings.primaryColor || '#00C853';
+
+            // Get winner info for each user
+            const getUserWinnerInfo = (userId) => {
+                return winners.find(w => w.user && (w.user._id === userId || w.user === userId));
+            };
+
+            // Filter users based on search and status
+            const filteredUsers = users.filter(user => {
+                const winnerInfo = getUserWinnerInfo(user._id);
+                const isWinner = !!winnerInfo;
+                
+                // Filter by search term (name or email)
+                const searchTerm = (drawsFilter.search || '').toLowerCase().trim();
+                if (searchTerm) {
+                    const nameMatch = (user.fullName || '').toLowerCase().includes(searchTerm);
+                    const emailMatch = (user.emailAddress || '').toLowerCase().includes(searchTerm);
+                    if (!nameMatch && !emailMatch) return false;
+                }
+                
+                // Filter by status
+                if (drawsFilter.status === 'winner' && !isWinner) return false;
+                if (drawsFilter.status === 'regular' && isWinner) return false;
+                
+                return true;
+            });
+
+            return `
+                <div class="space-y-6">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-2xl font-bold">Draw Management</h2>
+                            <p class="text-gray-600 mt-1">Manage winners by assigning prizes to users.</p>
+                        </div>
+                    </div>
+
+                    <!-- Filter Section -->
+                    <div class="bg-white rounded-xl shadow-lg border p-4">
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <!-- Search Filter -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Search by Name or Email</label>
+                                <input 
+                                    type="text" 
+                                    id="draws-search-filter"
+                                    placeholder="Search users..." 
+                                    value="${drawsFilter.search || ''}"
+                                    oninput="handleDrawsSearchInput(this.value)"
+                                    autocomplete="off"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                />
+                            </div>
+                            
+                            <!-- Status Filter -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Status</label>
+                                <select 
+                                    id="draws-status-filter"
+                                    onchange="updateDrawsFilter('status', this.value)"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-${primaryColor.replace('#', '')} focus:border-transparent"
+                                    style="focus:ring-color: ${primaryColor};"
+                                >
+                                    <option value="all" ${drawsFilter.status === 'all' ? 'selected' : ''}>All Users</option>
+                                    <option value="winner" ${drawsFilter.status === 'winner' ? 'selected' : ''}>Winners Only</option>
+                                    <option value="regular" ${drawsFilter.status === 'regular' ? 'selected' : ''}>Regular Users Only</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Filter Summary -->
+                        <div class="mt-4 pt-4 border-t border-gray-200">
+                            <p class="text-sm text-gray-600 filter-summary-text">
+                                Showing <span class="font-semibold text-gray-900">${filteredUsers.length}</span> of <span class="font-semibold text-gray-900">${users.length}</span> users
+                                ${drawsFilter.search ? `<span class="text-gray-500">• Searching: "${drawsFilter.search}"</span>` : ''}
+                                ${drawsFilter.status !== 'all' ? `<span class="text-gray-500">• Filter: ${drawsFilter.status === 'winner' ? 'Winners' : 'Regular Users'}</span>` : ''}
+                            </p>
+                            ${(drawsFilter.search || drawsFilter.status !== 'all') ? `
+                                <button 
+                                    onclick="clearDrawsFilters()"
+                                    class="mt-2 text-sm hover:underline"
+                                    style="color: ${primaryColor};"
+                                >
+                                    Clear Filters
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-lg border overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="py-3 px-4 text-left text-xs font-semibold uppercase text-gray-600">User</th>
+                                    <th class="py-3 px-4 text-left text-xs font-semibold uppercase text-gray-600">Email</th>
+                                    <th class="py-3 px-4 text-center text-xs font-semibold uppercase text-gray-600">Status</th>
+                                    <th class="py-3 px-4 text-center text-xs font-semibold uppercase text-gray-600">Prize Won</th>
+                                    <th class="py-3 px-4 text-right text-xs font-semibold uppercase text-gray-600">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                ${filteredUsers.length === 0 ? `<tr><td colSpan="5" class="py-6 text-center text-gray-500">${users.length === 0 ? 'No users found.' : 'No users match the current filters.'}</td></tr>` :
+                    filteredUsers.map(user => {
+                        const winnerInfo = getUserWinnerInfo(user._id);
+                        const isWinner = !!winnerInfo;
+                        return `
+                                    <tr key="${user._id}" class="hover:bg-gray-50">
+                                        <td class="py-3 px-4 text-sm font-medium text-gray-900">
+                                            ${user.fullName || 'N/A'}
+                                        </td>
+                                        <td class="py-3 px-4 text-sm text-gray-600">
+                                            ${user.emailAddress || 'N/A'}
+                                        </td>
+                                        <td class="py-3 px-4 text-center">
+                                            ${isWinner 
+                                                ? '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Winner</span>'
+                                                : '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600">Regular</span>'
+                                            }
+                                        </td>
+                                        <td class="py-3 px-4 text-center text-sm text-gray-600">
+                                            ${winnerInfo && winnerInfo.prize ? (winnerInfo.prize.name || 'N/A') : '-'}
+                                        </td>
+                                        <td class="py-3 px-4 text-right">
+                                            <div class="flex items-center justify-end space-x-2">
+                                                <button 
+                                                    onclick="handleMakeWinner('${user._id}', ${isWinner ? `'${winnerInfo._id}'` : 'null'})" 
+                                                    class="px-3 py-1.5 text-white font-semibold rounded-lg hover:opacity-90 text-sm flex items-center"
+                                                    style="background-color: ${primaryColor}"
+                                                >
+                                                    ${isWinner ? ICONS.Edit() : ICONS.Trophy()}
+                                                    <span class="ml-1">${isWinner ? 'Edit' : 'Make Winner'}</span>
+                                                </button>
+                                                ${isWinner ? `
+                                                    <button 
+                                                        onclick="handleUnassignWinner('${winnerInfo._id}', '${user.fullName || user.emailAddress || 'User'}')" 
+                                                        class="px-3 py-1.5 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 text-sm flex items-center"
+                                                        title="Unassign Winner"
+                                                    >
+                                                        ${ICONS.Trash2()}
+                                                        <span class="ml-1">Unassign</span>
+                                                    </button>
+                                                ` : ''}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                    }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderDonationsPage() {
+            if (state.currentSubTab === 'new' || (state.currentSubTab === 'edit' && state.donationToEditId)) {
+                const donation = state.currentSubTab === 'edit'
+                    ? state.donations.find(d => d._id === state.donationToEditId)
+                    : null;
+                return renderDonationForm(donation);
+            }
+            return renderDonationList();
+        }
+
+        function renderDonationList() {
+            const { donations, settings } = state;
+            const primaryColor = settings.primaryColor || '#00C853';
+            return `
+                <div class="space-y-6">
+                    <div class="flex justify-between items-center">
+                         <h2 class="text-2xl font-bold">Manage Donation Causes (${donations.length})</h2>
+                        <button onclick="handleViewChange('donations', 'new')" class="px-4 py-2 text-white font-semibold rounded-lg shadow-md hover:opacity-90 flex items-center" style="background-color: ${primaryColor}">
+                            ${ICONS.Plus()} <span class="ml-2">New Cause</span>
+                        </button>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-lg border overflow-x-auto">
+                         <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="py-3 px-4 text-left text-xs font-semibold uppercase text-gray-600">Title</th>
+                                    <th class="py-3 px-4 text-left text-xs font-semibold uppercase text-gray-600">Short Desc.</th>
+                                    <th class="py-3 px-4 text-center text-xs font-semibold uppercase text-gray-600">Goal (£)</th>
+                                    <th class="py-3 px-4 text-center text-xs font-semibold uppercase text-gray-600">Raised (£)</th>
+                                    <th class="py-3 px-4 text-center text-xs font-semibold uppercase text-gray-600">Progress</th>
+                                    <th class="py-3 px-4 text-right text-xs font-semibold uppercase text-gray-600">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                ${donations.length === 0 ? `<tr><td colSpan="6" class="py-6">${NoDataMessage({ item: "Donation Causes", action: "New Cause" })}</td></tr>` :
+                    donations.map(d => {
+                        const progress = ((d.raised || 0) / (d.goal || 1)) * 100;
+                        return `
+                                            <tr key="${d._id}" class="hover:bg-gray-50">
+                                                <td class="py-3 px-4 text-sm font-medium text-gray-900">${d.name}</td>
+                                                <td class="py-3 px-4 text-sm text-gray-600">${(d.shortDescription || '').substring(0, 30)}...</td>
+                                                <td class="py-3 px-4 text-sm text-center">£${(d.goal || 0).toLocaleString()}</td>
+                                                <td class="py-3 px-4 text-sm text-center">£${(d.raised || 0).toLocaleString()}</td>
+                                                <td class="py-3 px-4 text-sm text-center"><span class="font-semibold ${progress >= 100 ? 'text-teal-600' : 'text-yellow-600'}">${progress.toFixed(0)}%</span></td>
+                                                <td class="py-3 px-4 text-right flex items-center justify-end space-x-2">
+                                                    <button onclick="handleViewChange('donations', 'edit', '${d._id}')" class="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50">${ICONS.Edit()}</button>
+                                                    <button onclick="handleDeleteItem('donations', '${d._id}')" class="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50">${ICONS.Trash2()}</button>
+                                                </td>
+                                            </tr>
+                                        `;
+                    }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderDonationForm(donationToEdit) {
+            const isEdit = !!donationToEdit;
+
+            const f = {
+                id: donationToEdit?._id || '',
+                title: donationToEdit?.name || '',
+                short: donationToEdit?.shortDescription || '',
+                detail: donationToEdit?.content?.[0]?.value?.[0]?.description || '',
+                image: donationToEdit?.image || '',
+                goal: donationToEdit?.goal || 10000,
+                raised: donationToEdit?.raised || 0,
+            };
+
+            return `
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-green-200" style="border-left: 8px solid #4CAF50">
+                    <h2 class="text-2xl font-bold border-b pb-3 mb-6 text-green-700">${isEdit ? `Edit Cause: ${donationToEdit.name}` : 'Create New Donation Cause'}</h2>
+                    <form id="donation-form" class="space-y-6">
+                        <input type="hidden" name="id" value="${f.id}">
+                        <input type="hidden" name="isEdit" value="${isEdit}">
+                        
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div><label class="block text-sm font-medium mb-1">Cause Title *</label><input type="text" name="title" value="${f.title}" required class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300"/></div>
+                            <div><label class="block text-sm font-medium mb-1">Short Description (for tiles) *</label><input type="text" name="short" value="${f.short}" required class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300"/></div>
+                        </div>
+                        
+                        <!-- Image URL Field -->
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Donation Image URL</label>
+                            <input 
+                                type="url" 
+                                name="image" 
+                                id="donation-image-url"
+                                value="${f.image}" 
+                                placeholder="https://example.com/image.jpg"
+                                oninput="updateDonationImagePreview()"
+                                class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300"
+                            />
+                            <p class="text-xs text-gray-500 mt-1">Enter the URL of the donation image</p>
+                        </div>
+                        
+                        <!-- Image Preview -->
+                        <div id="donation-image-preview-container" style="display: ${f.image ? 'block' : 'none'};">
+                            <label class="block text-sm font-medium mb-2">Image Preview</label>
+                            <div class="border-2 border-gray-200 rounded-lg p-4 bg-gray-50">
+                                <img 
+                                    id="donation-image-preview" 
+                                    src="${f.image}" 
+                                    alt="Donation Preview" 
+                                    class="max-w-full h-auto max-h-64 mx-auto rounded-lg shadow-md" 
+                                    onerror="this.style.display='none'; document.getElementById('donation-image-preview-container').style.display='none';" 
+                                />
+                            </div>
+                        </div>
+                        
+                        <div><label class="block text-sm font-medium mb-1">Detail Text (Long description) *</label><textarea name="detail" rows="3" required class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300">${f.detail}</textarea></div>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div><label class="block text-sm font-medium mb-1">Goal Amount (£) *</label><input type="number" name="goal" value="${f.goal}" required min="1" step="100" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300"/></div>
+                            <div><label class="block text-sm font-medium mb-1">Amount Raised (£)</label><input type="number" name="raised" value="${f.raised}" min="0" step="1" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300" readonly/></div>
+                        </div>
+                        <div class="flex justify-end space-x-4 pt-6 border-t">
+                            <button type="button" onclick="handleViewChange('donations', 'list')" class="px-6 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400">Cancel</button>
+                            <button type="submit" id="save-button" class="px-6 py-2 text-white font-bold rounded-lg transition bg-green-600 hover:bg-green-700">
+                                ${ICONS.Save()} <span class="ml-2">${isEdit ? 'Update Cause' : 'Create Cause'}</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+        }
+
+        function renderContentManager() {
+            if (state.currentSubTab) {
+                return renderContentForm(state.currentSubTab);
+            }
+
+            // Mock data for Content Blocks (kept locally)
+            const mockContent = [
+                { id: 'about', title: 'About Us Page', sections: 3, lastUpdated: '2025-10-01' },
+                { id: 'tnc', title: 'Terms & Conditions', sections: 12, lastUpdated: '2025-09-20' },
+                { id: 'privacy', title: 'Privacy Policy', sections: 7, lastUpdated: '2025-09-20' },
+                { id: 'faq', title: 'FAQ Section', sections: 15, lastUpdated: '2025-10-25' },
+            ];
+
+            return `
+                <div class="space-y-6">
+                       <h2 class="text-2xl font-bold">Static Content Manager</h2>
+                       <p class="text-gray-600">Manage the text and legal pages of your sweepstakes website.</p>
+                       <div class="bg-white rounded-xl shadow-lg border overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                               <thead class="bg-gray-50">
+                                   <tr>
+                                       <th class="py-3 px-4 text-left text-xs font-semibold uppercase text-gray-600">Page Title</th>
+                                       <th class="py-3 px-4 text-left text-xs font-semibold uppercase text-gray-600">Sections</th>
+                                       <th class="py-3 px-4 text-center text-xs font-semibold uppercase text-gray-600">Last Updated</th>
+                                       <th class="py-3 px-4 text-right text-xs font-semibold uppercase text-gray-600">Actions</th>
+                                   </tr>
+                               </thead>
+                               <tbody class="bg-white divide-y divide-gray-200">
+                                   ${mockContent.map(c => `
+                                       <tr key="${c.id}" class="hover:bg-gray-50">
+                                           <td class="py-3 px-4 text-sm font-medium text-gray-900">${c.title}</td>
+                                           <td class="py-3 px-4 text-sm text-gray-600">${c.sections}</td>
+                                           <td class="py-3 px-4 text-sm text-center">${c.lastUpdated}</td>
+                                           <td class="py-3 px-4 text-right">
+                                               <button onclick="handleViewChange('content', '${c.id}')" class="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50">${ICONS.Edit()} <span class="ml-1">Edit</span></button>
+                                           </td>
+                                       </tr>
+                                   `).join('')}
+                               </tbody>
+                           </table>
+                       </div>
+                  </div>
+            `;
+        }
+
+        function renderContentForm(contentId) {
+            const { settings } = state;
+            const primaryColor = settings.primaryColor || '#00C853';
+
+            // Mock data for Content Blocks (kept locally)
+            const mockContent = [
+                { id: 'about', title: 'About Us Page', sections: 3, lastUpdated: '2025-10-01' },
+                { id: 'tnc', title: 'Terms & Conditions', sections: 12, lastUpdated: '2025-09-20' },
+                { id: 'privacy', title: 'Privacy Policy', sections: 7, lastUpdated: '2025-09-20' },
+                { id: 'faq', title: 'FAQ Section', sections: 15, lastUpdated: '2025-10-25' },
+            ];
+            const pageData = mockContent.find(c => c.id === contentId) || {};
+            const title = pageData.title || '';
+            const body = "This is the main body content that appears on the public website page. (This is mock data).";
+
+            return `
+                <div class="bg-white p-6 rounded-xl shadow-lg border border-purple-200" style="border-left: 8px solid purple">
+                    <h2 class="text-2xl font-bold border-b pb-3 mb-6 text-purple-700">Edit ${title || 'Content'}</h2>
+                    <p class="text-sm text-gray-500 mb-4">You would typically integrate a rich text editor (like TinyMCE or Quill) here for complex text editing.</p>
+                    <form id="content-form" data-content-id="${contentId}" class="space-y-4">
+                        <input type="hidden" name="id" value="${contentId}">
+                        <div><label class="block text-sm font-medium mb-1">Content Block Title</label><input type="text" name="title" value="${title}" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300"/></div>
+                        <div><label class="block text-sm font-medium mb-1">Page Body (HTML/Markdown)</label><textarea name="body" rows="10" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300">${body}</textarea></div>
+                        <div class="flex justify-end space-x-4 pt-4 border-t">
+                            <button type="button" onclick="handleViewChange('content', null)" class="px-6 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400">Cancel</button>
+                            <button type="submit" class="px-6 py-2 text-white font-bold rounded-lg hover:opacity-90" style="background-color: ${primaryColor}">
+                                ${ICONS.Save()} <span class="ml-2">Save Content</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+        }
+
+        function renderSiteSettings() {
+            const { settings, user } = state;
+            const primaryColor = settings.primaryColor || '#00C853';
+
+            return `
+                <div class="space-y-8">
+                    <h2 class="text-2xl font-bold">Global Site Configuration</h2>
+
+                    <div class="bg-white p-6 rounded-xl shadow-lg border border-b-4 border-red-400">
+                         <h3 class="text-xl font-bold border-b pb-3 mb-6">Branding & Theme</h3>
+                         <form id="settings-form" class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Primary Accent Color</label>
+                                <div class="flex items-center space-x-3">
+                                    <input type="color" name="primaryColor" value="${primaryColor}" oninput="handleColorChange(event)" class="w-16 h-12 p-0 rounded-lg border-none cursor-pointer" />
+                                    <input type="text" name="primaryColorHex" id="primaryColorHex" value="${primaryColor}" oninput="handleColorChange(event, 'text')" class="p-3 rounded-lg bg-gray-100 border text-sm w-40 font-mono" maxLength="7" pattern="#[0-9a-fA-F]{6}" />
+                                    <span class="text-gray-500 text-sm">This color affects all buttons, links, and highlights on the frontend.</span>
+                                </div>
+                            </div>
+                             <div class="flex justify-end pt-4 border-t">
+                                <button type="submit" id="save-button" class="px-6 py-2 text-white font-bold rounded-lg transition hover:opacity-90" style="background-color: ${primaryColor}">
+                                    ${ICONS.Save()} <span class="ml-2">Save Theme</span>
+                                </button>
+                            </div>
+                         </form>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-lg border">
+                        <h3 class="text-xl font-bold border-b pb-3 mb-6">Admin User Management</h3>
+                        <p class="text-sm text-gray-500 mb-4">Users who can access this Admin Panel.</p>
+                        <div class="p-3 bg-gray-50 rounded-lg border flex justify-between items-center">
+                            <span class="font-semibold">${user?.email || 'Authenticated User'}</span>
+                            <span class="text-xs font-bold text-green-600 px-2 py-0.5 bg-green-100 rounded-full">Primary Admin (Current)</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderOrders() {
+            const { settings, transactions, prizes } = state;
+            const primaryColor = settings.primaryColor || '#00C853';
+
+            // Use real transaction data
+            const orders = transactions.slice(0, 30).map(t => ({
+                id: t.trxID,
+                user: t.user?.fullName || 'User',
+                prize: t.order?.prizeName || 'Prize',
+                entries: t.order?.entries?.amount || 0,
+                amount: t.order?.entries?.totalCost ? (t.order.entries.totalCost / 100).toFixed(2) : '0.00',
+                status: t.order?.isPaid ? 'Completed' : 'Pending',
+                date: new Date(t.createdAt || Date.now()).toLocaleDateString(),
+            }));
+
+            return `
+                <div class="space-y-6">
+                     <h2 class="text-2xl font-bold">Transaction Log</h2>
+                     <p class="text-gray-600">Log of all user purchases and entries.</p>
+                     <div class="bg-white rounded-xl shadow-lg border overflow-x-auto">
+                          <table class="min-w-full divide-y divide-gray-200">
+                             <thead class="bg-gray-50">
+                                 <tr>
+                                     <th class="py-3 px-4 text-left text-xs font-semibold uppercase text-gray-600">ID</th>
+                                     <th class="py-3 px-4 text-left text-xs font-semibold uppercase text-gray-600">User</th>
+                                     <th class="py-3 px-4 text-left text-xs font-semibold uppercase text-gray-600">Prize</th>
+                                     <th class="py-3 px-4 text-center text-xs font-semibold uppercase text-gray-600">Entries</th>
+                                     <th class="py-3 px-4 text-center text-xs font-semibold uppercase text-gray-600">Amount (£)</th>
+                                     <th class="py-3 px-4 text-center text-xs font-semibold uppercase text-gray-600">Status</th>
+                                     <th class="py-3 px-4 text-center text-xs font-semibold uppercase text-gray-600">Date</th>
+                                 </tr>
+                             </thead>
+                             <tbody class="bg-white divide-y divide-gray-200">
+                                 ${orders.length === 0 ? `<tr><td colSpan="7" class="py-6 text-center text-gray-500">No transactions yet.</td></tr>` :
+                    orders.map(o => `
+                                     <tr key="${o.id}" class="hover:bg-gray-50 text-sm">
+                                         <td class="py-3 px-4 font-mono text-xs">${o.id}</td>
+                                         <td class="py-3 px-4 font-medium text-gray-900">${o.user}</td>
+                                         <td class="py-3 px-4 text-gray-600">${o.prize}</td>
+                                         <td class="py-3 px-4 text-center font-bold" style="color: ${primaryColor}">${o.entries}</td>
+                                         <td class="py-3 px-4 text-center font-semibold">£${o.amount}</td>
+                                         <td class="py-3 px-4 text-center">
+                                            <span class="text-xs font-medium px-2 py-0.5 rounded-full ${o.status === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                                                ${o.status}
+                                            </span>
+                                         </td>
+                                         <td class="py-3 px-4 text-center text-xs text-gray-500">${o.date}</td>
+                                     </tr>
+                                 `).join('')}
+                             </tbody>
+                         </table>
+                     </div>
+                </div>
+            `;
+        }
+
+        // --- Event Handlers (Attached to window to be globally accessible) ---
+
+        window.handleSidebarNav = (page, subTab = null) => {
+            setState({ currentPage: page, currentSubTab: subTab, prizeToEditId: null, donationToEditId: null });
+        };
+
+        // NEW function
+        window.addPreviewImageField = () => {
+            const container = document.getElementById('preview-images-container');
+            if (container) {
+                const newField = document.createElement('div');
+                newField.className = 'flex items-center space-x-2 preview-image-field';
+                newField.innerHTML = `
+                    <input type="url" name="previewImages" value="" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300" placeholder="https://..."/>
+                    <button type="button" onclick="removePreviewImageField(this)" class="p-3 bg-red-500 text-white rounded-lg hover:bg-red-600 flex-shrink-0">
+                        ${ICONS.Trash2()}
+                    </button>
+                `;
+                container.appendChild(newField);
+                newField.querySelector('input').focus();
+            }
+        };
+
+        // NEW function
+        window.removePreviewImageField = (button) => {
+            const field = button.closest('.preview-image-field');
+            if (field) {
+                field.remove();
+            }
+        };
+
+        window.handleViewChange = (page, tab, id = null) => {
+            let newState = { currentPage: page, currentSubTab: tab };
+            if (page === 'prizes') newState.prizeToEditId = (tab === 'edit' ? id : null);
+            if (page === 'donations') newState.donationToEditId = (tab === 'edit' ? id : null);
+            if (page === 'content') newState.contentToEditId = (tab ? id : null);
+            setState(newState);
+        };
+
+
+        window.handleLogout = () => {
+            localStorage.removeItem('adminToken');
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+            }
+            setState({
+                isAuthenticated: false,
+                token: null,
+                user: null,
+                prizes: [],
+                donations: [],
+                transactions: []
+            });
+            alert("Logged out successfully.");
+        };
+
+        window.handleDeleteItem = async (collectionName, id) => {
+            const itemName = collectionName === 'prizes' ? 'prize' : 'donation cause';
+            if (!confirm(`Are you sure you want to delete this ${itemName}? This action cannot be undone.`)) return;
+
+            try {
+                if (collectionName === 'prizes' && socket && state.token) {
+                    // Optimistic UI update: remove prize from state immediately for better UX
+                    const prizeToDelete = state.prizes.find(p => p._id === id);
+                    if (prizeToDelete) {
+                        const updatedPrizes = state.prizes.filter(p => p._id !== id);
+                        setState({ prizes: updatedPrizes });
+                    }
+
+                    // Token is already in socket.handshake.auth.token, don't send it in payload
+                    socket.emit('prizes:delete', { id: id }, (response) => {
+                        if (response?.success) {
+                            // Show toast first and wait for it to render
+                            window.showToast('Prize deleted successfully!', 'success');
+                            // Use requestAnimationFrame to ensure toast is rendered before any state changes
+                            requestAnimationFrame(() => {
+                                requestAnimationFrame(() => {
+                                    // Now reload data after toast is visible to ensure consistency
+                                    loadPrizesData();
+                                    setTimeout(() => {
+                                        setState({ ...state, currentSubTab: 'list', prizeToEditId: null });
+                                    }, 300);
+                                });
+                            });
+                        } else {
+                            // Revert optimistic update on error
+                            loadPrizesData();
+                            window.showToast("Error deleting prize: " + (response?.message || 'Unknown error'), 'error');
+                        }
+                    });
+                } else if (collectionName === 'donations' && socket && state.token) {
+                    // Token is already in socket.handshake.auth.token, don't send it in payload
+                    socket.emit('donations:delete', { id: id }, (response) => {
+                        if (response?.success) {
+                            // Show toast first and wait for it to render
+                            window.showToast('Donation cause deleted successfully!', 'success');
+                            // Use requestAnimationFrame to ensure toast is rendered before any state changes
+                            requestAnimationFrame(() => {
+                                requestAnimationFrame(() => {
+                                    // Now reload data after toast is visible
+                                    loadDonationsData();
+                                    setTimeout(() => {
+                                        setState({ ...state, currentSubTab: 'list' });
+                                    }, 500);
+                                });
+                            });
+                        } else {
+                            window.showToast("Error deleting donation: " + (response?.message || 'Unknown error'), 'error');
+                        }
+                    });
+                } else {
+                    window.showToast('Unable to delete: Not connected or not authenticated', 'error');
+                }
+            } catch (e) {
+                console.error(`Error deleting ${collectionName}:`, e);
+                window.showToast(`Error deleting: ${e.message}`, 'error');
+            }
+        };
+
+
+        // --- Winner Modal Handlers ---
+
+        let allPrizesForFilter = [];
+
+        window.handleMakeWinner = function(userId, winnerId) {
+            console.log('[handleMakeWinner] Called with userId:', userId, 'winnerId:', winnerId, 'type:', typeof winnerId);
+            
+            // Handle string 'null' from onclick
+            if (winnerId === 'null' || winnerId === null || winnerId === undefined) {
+                winnerId = null;
+            }
+            
+            const user = state.users.find(u => u._id === userId);
+            if (!user) {
+                console.error('[handleMakeWinner] User not found:', userId);
+                window.showToast('User not found', 'error');
+                return;
+            }
+
+            const winner = winnerId ? state.winners.find(w => w._id === winnerId) : null;
+            const modal = document.getElementById('winner-modal');
+            const modalContent = document.getElementById('winner-modal-content');
+            
+            if (!modal || !modalContent) {
+                console.error('[handleMakeWinner] Modal elements not found!');
+                window.showToast('Modal not found. Please refresh the page.', 'error');
+                return;
+            }
+            
+            const title = document.getElementById('winner-modal-title');
+            const userIdInput = document.getElementById('winner-user-id');
+            const winnerIdInput = document.getElementById('winner-id');
+            const imageUrlInput = document.getElementById('winner-image-url');
+            const descriptionInput = document.getElementById('winner-description');
+            const prizeSelect = document.getElementById('winner-prize-select');
+            const prizeSearch = document.getElementById('winner-prize-search');
+            
+            if (!title || !userIdInput || !winnerIdInput || !imageUrlInput || !descriptionInput || !prizeSelect || !prizeSearch) {
+                console.error('[handleMakeWinner] Form elements not found!');
+                window.showToast('Form elements not found. Please refresh the page.', 'error');
+                return;
+            }
+
+            // Set user ID
+            userIdInput.value = userId;
+            winnerIdInput.value = winnerId || '';
+
+            // Set title
+            title.textContent = winner ? 'Edit Winner' : 'Make Winner';
+
+            // Populate form if editing
+            if (winner) {
+                imageUrlInput.value = winner.imageUrl || '';
+                descriptionInput.value = winner.description || '';
+                updateImagePreview();
+            } else {
+                imageUrlInput.value = '';
+                descriptionInput.value = '';
+                document.getElementById('image-preview-container').style.display = 'none';
+            }
+
+            // Populate prizes dropdown
+            allPrizesForFilter = state.prizes || [];
+            populatePrizeSelect(allPrizesForFilter);
+            
+            // Set selected prize if editing
+            if (winner && winner.prize) {
+                const prizeId = winner.prize._id || winner.prize;
+                prizeSelect.value = prizeId;
+                // Show prize info for existing winner
+                setTimeout(() => {
+                    showSelectedPrizeInfo();
+                }, 100);
+            } else {
+                prizeSelect.value = '';
+                prizeSearch.value = '';
+                // Hide prize info
+                const infoContainer = document.getElementById('selected-prize-info');
+                if (infoContainer) {
+                    infoContainer.style.display = 'none';
+                }
+            }
+
+            // Update button color
+            const saveBtn = document.getElementById('winner-save-btn');
+            if (saveBtn) {
+                saveBtn.style.backgroundColor = state.settings?.primaryColor || '#00C853';
+            }
+
+            // Initialize form handler
+            initWinnerFormHandler();
+
+            // Show modal
+            console.log('[handleMakeWinner] Showing modal');
+            modal.style.display = 'flex';
+            // Force a reflow
+            void modal.offsetHeight;
+            setTimeout(() => {
+                if (modalContent) {
+                    modalContent.style.transform = 'scale(1)';
+                    modalContent.style.opacity = '1';
+                }
+            }, 10);
+        }
+
+        window.hideWinnerModal = function() {
+            const modal = document.getElementById('winner-modal');
+            const modalContent = document.getElementById('winner-modal-content');
+            modalContent.style.transform = 'scale(0.95)';
+            modalContent.style.opacity = '0';
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+
+        window.updateImagePreview = function() {
+            const imageUrl = document.getElementById('winner-image-url').value;
+            const previewContainer = document.getElementById('image-preview-container');
+            const previewImg = document.getElementById('image-preview');
+
+            if (imageUrl && imageUrl.trim() !== '') {
+                previewImg.src = imageUrl;
+                previewImg.style.display = 'block';
+                previewContainer.style.display = 'block';
+            } else {
+                previewContainer.style.display = 'none';
+            }
+        }
+
+        window.updateDonationImagePreview = function() {
+            const imageUrlInput = document.getElementById('donation-image-url');
+            const previewContainer = document.getElementById('donation-image-preview-container');
+            const previewImg = document.getElementById('donation-image-preview');
+
+            if (!imageUrlInput || !previewContainer || !previewImg) return;
+
+            const imageUrl = imageUrlInput.value;
+
+            if (imageUrl && imageUrl.trim() !== '') {
+                previewImg.src = imageUrl;
+                previewImg.style.display = 'block';
+                previewContainer.style.display = 'block';
+            } else {
+                previewContainer.style.display = 'none';
+            }
+        }
+
+        function populatePrizeSelect(prizes) {
+            const select = document.getElementById('winner-prize-select');
+            const currentValue = select.value; // Save current selection
+            select.innerHTML = '';
+            
+            if (prizes.length === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'No prizes available';
+                select.appendChild(option);
+                // Hide prize info if no prizes
+                const infoContainer = document.getElementById('selected-prize-info');
+                if (infoContainer) {
+                    infoContainer.style.display = 'none';
+                }
+                return;
+            }
+
+            prizes.forEach(prize => {
+                const option = document.createElement('option');
+                option.value = prize._id;
+                option.textContent = prize.name;
+                option.setAttribute('data-name', prize.name.toLowerCase());
+                select.appendChild(option);
+            });
+
+            // Restore selection if it exists in the new list
+            if (currentValue) {
+                const optionExists = Array.from(select.options).some(opt => opt.value === currentValue);
+                if (optionExists) {
+                    select.value = currentValue;
+                    // Show prize info for restored selection
+                    setTimeout(() => {
+                        showSelectedPrizeInfo();
+                    }, 10);
+                }
+            }
+        }
+
+        window.filterPrizes = function() {
+            const searchTerm = document.getElementById('winner-prize-search').value.toLowerCase();
+            const select = document.getElementById('winner-prize-select');
+            
+            if (!searchTerm) {
+                populatePrizeSelect(allPrizesForFilter);
+                // Show info for currently selected prize if any
+                if (select.value) {
+                    showSelectedPrizeInfo();
+                }
+                return;
+            }
+
+            const filtered = allPrizesForFilter.filter(prize => 
+                prize.name.toLowerCase().includes(searchTerm)
+            );
+            populatePrizeSelect(filtered);
+            // Show info for currently selected prize if it's still in filtered results
+            if (select.value) {
+                showSelectedPrizeInfo();
+            }
+        }
+
+        window.showSelectedPrizeInfo = function() {
+            const select = document.getElementById('winner-prize-select');
+            const selectedPrizeId = select.value;
+            const infoContainer = document.getElementById('selected-prize-info');
+            const titleEl = document.getElementById('selected-prize-title');
+            const descriptionEl = document.getElementById('selected-prize-description');
+
+            if (!selectedPrizeId || selectedPrizeId === '') {
+                infoContainer.style.display = 'none';
+                return;
+            }
+
+            // Find the selected prize in the prizes array
+            const selectedPrize = state.prizes.find(p => p._id === selectedPrizeId);
+            
+            if (selectedPrize) {
+                titleEl.textContent = selectedPrize.name || 'No title';
+                descriptionEl.textContent = selectedPrize.shortDescription || selectedPrize.detailedDescription || 'No description available';
+                infoContainer.style.display = 'block';
+            } else {
+                infoContainer.style.display = 'none';
+            }
+        }
+
+        window.handleUnassignWinner = function(winnerId, userName) {
+            if (!confirm(`Are you sure you want to unassign ${userName} as a winner? This action cannot be undone.`)) {
+                return;
+            }
+
+            if (!socket) {
+                window.showToast('Socket not connected', 'error');
+                return;
+            }
+
+            console.log('[handleUnassignWinner] Unassigning winner:', winnerId);
+            socket.emit('winner:delete', { winnerId: winnerId });
+        }
+
+        // Handle winner form submission
+        function initWinnerFormHandler() {
+            const winnerForm = document.getElementById('winner-form');
+            if (winnerForm) {
+                // Remove existing listener if any
+                const newForm = winnerForm.cloneNode(true);
+                winnerForm.parentNode.replaceChild(newForm, winnerForm);
+                
+                newForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    if (!socket) {
+                        window.showToast('Socket not connected', 'error');
+                        return;
+                    }
+                    
+                    const userId = document.getElementById('winner-user-id').value;
+                    const winnerId = document.getElementById('winner-id').value;
+                    const imageUrl = document.getElementById('winner-image-url').value;
+                    const prizeId = document.getElementById('winner-prize-select').value;
+                    const description = document.getElementById('winner-description').value;
+
+                    if (!userId || !prizeId || !imageUrl) {
+                        window.showToast('Please fill in all required fields', 'error');
+                        return;
+                    }
+
+                    const saveBtn = document.getElementById('winner-save-btn');
+                    const originalBtnText = saveBtn.innerHTML;
+                    saveBtn.disabled = true;
+                    saveBtn.style.opacity = '0.7';
+                    saveBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-spin mr-2"><circle cx="12" cy="12" r="10" opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" opacity="0.75"/></svg><span>Saving...</span>`;
+
+                    try {
+                        if (winnerId && winnerId !== '') {
+                            // Update existing winner
+                            socket.emit('winner:update', {
+                                winnerId: winnerId,
+                                prizeId: prizeId,
+                                imageUrl: imageUrl,
+                                description: description
+                            }, (response) => {
+                                // Handle response in case of immediate error
+                                if (response && !response.success) {
+                                    saveBtn.disabled = false;
+                                    saveBtn.style.opacity = '1';
+                                    saveBtn.innerHTML = originalBtnText;
+                                }
+                            });
+                        } else {
+                            // Create new winner
+                            socket.emit('winner:assign', {
+                                userId: userId,
+                                prizeId: prizeId,
+                                imageUrl: imageUrl,
+                                description: description
+                            }, (response) => {
+                                // Handle response in case of immediate error
+                                if (response && !response.success) {
+                                    saveBtn.disabled = false;
+                                    saveBtn.style.opacity = '1';
+                                    saveBtn.innerHTML = originalBtnText;
+                                }
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error saving winner:', error);
+                        window.showToast('Error saving winner: ' + error.message, 'error');
+                        saveBtn.disabled = false;
+                        saveBtn.style.opacity = '1';
+                        saveBtn.innerHTML = originalBtnText;
+                    }
+                });
+            }
+        }
+
+        // --- Form Handlers ---
+
+        async function handleSavePrize(event) {
+            event.preventDefault();
+
+            const button = document.getElementById('save-button');
+            const originalButtonText = button.innerHTML;
+            button.disabled = true;
+            button.style.opacity = '0.7';
+            button.style.cursor = 'not-allowed';
+            button.innerHTML = `${ICONS.Loader()} <span class="ml-2">Saving...</span>`;
+
+            try {
+                const form = event.target;
+                const formData = new FormData(form);
+                const isEdit = formData.get('isEdit') === 'true';
+                const id = formData.get('id');
+
+                const parseEntries = (val) => val.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n > 0);
+
+                // Get all preview images
+                const previewImageNodes = form.querySelectorAll('input[name="previewImages"]');
+                const previewImages = Array.from(previewImageNodes).map(input => input.value).filter(url => url.trim() !== '');
+
+                const prizeData = {
+                    name: formData.get('name'),
+                    shortDescription: formData.get('subtitle'),
+                    detailedDescription: formData.get('subtitle'),
+                    drawTimestamp: new Date(formData.get('drawDate')),
+                    entries: {
+                        entryPrice: parseInt(formData.get('entryPrice')) || 1,
+                        minEntriesOrder: parseEntries(formData.get('entryOptions')),
+                        maxEntries: parseInt(formData.get('maxEntries')) || 10000,
+                    },
+                    thumbnail: formData.get('thumbnail'),
+                    previewImages: previewImages,
+                };
+
+                if (isEdit && socket && state.token) {
+                    // Token is already in socket.handshake.auth.token, don't send it in payload
+                    socket.emit('prizes:update', { id: id, update: prizeData }, (response) => {
+                        if (response?.success) {
+                            // Show success toast
+                            window.showToast("Prize updated successfully!", 'success');
+                            
+                            // Use requestAnimationFrame to ensure toast is rendered before any state changes
+                            requestAnimationFrame(() => {
+                                requestAnimationFrame(() => {
+                                    // Reload prizes data and wait for it to complete before navigating
+                                    loadPrizesData();
+                                    setTimeout(() => {
+                                        setState({
+                                            currentPage: 'prizes',
+                                            currentSubTab: 'list',
+                                            prizeToEditId: null
+                                        });
+                                    }, 300);
+                                });
+                            });
+                        } else {
+                            window.showToast("Error updating prize: " + (response?.message || 'Unknown error'), 'error');
+                            button.disabled = false;
+                            button.style.opacity = '1';
+                            button.style.cursor = 'pointer';
+                            button.innerHTML = `${ICONS.Save()} <span class="ml-2">Update Prize</span>`;
+                        }
+                    });
+                } else if (socket && state.token) {
+                    // Token is already in socket.handshake.auth.token, don't send it in payload
+                    socket.emit('prizes:new', { prize: prizeData }, (response) => {
+                        if (response?.success) {
+                            // Show success toast
+                            window.showToast("Prize created successfully!", 'success');
+                            
+                            // Use requestAnimationFrame to ensure toast is rendered before any state changes
+                            requestAnimationFrame(() => {
+                                requestAnimationFrame(() => {
+                                    // Reload prizes data and wait for it to complete before navigating
+                                    loadPrizesData();
+                                    setTimeout(() => {
+                                        setState({
+                                            currentPage: 'prizes',
+                                            currentSubTab: 'list',
+                                            prizeToEditId: null
+                                        });
+                                    }, 300);
+                                });
+                            });
+                        } else {
+                            window.showToast("Error creating prize: " + (response?.message || 'Unknown error'), 'error');
+                            button.disabled = false;
+                            button.style.opacity = '1';
+                            button.style.cursor = 'pointer';
+                            button.innerHTML = `${ICONS.Save()} <span class="ml-2">Create Prize</span>`;
+                        }
+                    });
+                } else {
+                    window.showToast("Unable to save: Not connected or not authenticated", 'error');
+                    button.disabled = false;
+                    button.style.opacity = '1';
+                    button.style.cursor = 'pointer';
+                    button.innerHTML = originalButtonText;
+                }
+            } catch (e) {
+                console.error("Error saving prize: ", e);
+                window.showToast("Error saving prize: " + e.message, 'error');
+                button.disabled = false;
+                button.style.opacity = '1';
+                button.style.cursor = 'pointer';
+                button.innerHTML = originalButtonText;
+            }
+        }
+
+        async function handleSaveDonation(event) {
+            event.preventDefault();
+
+            const button = document.getElementById('save-button');
+            const originalButtonText = button.innerHTML;
+            button.disabled = true;
+            button.style.opacity = '0.7';
+            button.style.cursor = 'not-allowed';
+            button.innerHTML = `${ICONS.Loader()} <span class="ml-2">Saving...</span>`;
+
+            try {
+                const form = event.target;
+                const formData = new FormData(form);
+                const isEdit = formData.get('isEdit') === 'true';
+                const id = formData.get('id');
+
+                const donationData = {
+                    title: formData.get('title'),
+                    short: formData.get('short'),
+                    detail: formData.get('detail'),
+                    image: formData.get('image') || '',
+                    goal: parseFloat(formData.get('goal')) || 0,
+                    raised: parseFloat(formData.get('raised')) || 0,
+                };
+
+                if (isEdit && socket && state.token) {
+                    // Token is already in socket.handshake.auth.token, don't send it in payload
+                    socket.emit('donations:update', { id: id, update: donationData }, (response) => {
+                        console.log('[DONATION] Update response:', response);
+                        if (response?.success) {
+                            // Show toast first and wait for it to render
+                            window.showToast("Donation cause updated successfully!", 'success');
+                            // Use requestAnimationFrame to ensure toast is rendered before any state changes
+                            requestAnimationFrame(() => {
+                                requestAnimationFrame(() => {
+                                    // Now reload data and change view after toast is visible
+                                    loadDonationsData();
+                                    setTimeout(() => {
+                                        setState({ currentPage: 'donations', currentSubTab: 'list', donationToEditId: null });
+                                    }, 300);
+                                });
+                            });
+                        } else {
+                            window.showToast("Error updating donation: " + (response?.message || 'Unknown error'), 'error');
+                            button.disabled = false;
+                            button.style.opacity = '1';
+                            button.style.cursor = 'pointer';
+                            button.innerHTML = originalButtonText;
+                        }
+                    });
+                } else if (socket && state.token) {
+                    // Token is already in socket.handshake.auth.token, don't send it in payload
+                    socket.emit('donations:new', { donation: donationData }, (response) => {
+                        console.log('[DONATION] Create response:', response);
+                        if (response?.success) {
+                            // Show toast first and wait for it to render
+                            window.showToast("Donation cause created successfully!", 'success');
+                            // Use requestAnimationFrame to ensure toast is rendered before any state changes
+                            requestAnimationFrame(() => {
+                                requestAnimationFrame(() => {
+                                    // Now reload data and change view after toast is visible
+                                    loadDonationsData();
+                                    setTimeout(() => {
+                                        setState({ currentPage: 'donations', currentSubTab: 'list', donationToEditId: null });
+                                    }, 300);
+                                });
+                            });
+                        } else {
+                            window.showToast("Error creating donation: " + (response?.message || 'Unknown error'), 'error');
+                            button.disabled = false;
+                            button.style.opacity = '1';
+                            button.style.cursor = 'pointer';
+                            button.innerHTML = originalButtonText;
+                        }
+                    });
+                } else {
+                    window.showToast("Unable to save: Not connected or not authenticated", 'error');
+                    button.disabled = false;
+                    button.style.opacity = '1';
+                    button.style.cursor = 'pointer';
+                    button.innerHTML = originalButtonText;
+                }
+            } catch (e) {
+                console.error("Error saving donation: ", e);
+                window.showToast("Error saving donation: " + e.message, 'error');
+                button.disabled = false;
+                button.style.opacity = '1';
+                button.style.cursor = 'pointer';
+                button.innerHTML = originalButtonText;
+            }
+        }
+
+        async function handleSaveSettings(event) {
+            event.preventDefault();
+
+            const button = document.getElementById('save-button');
+            button.disabled = true;
+            button.innerHTML = `${ICONS.Save()} <span class="ml-2">Saving...</span>`;
+
+            try {
+                const form = event.target;
+                const formData = new FormData(form);
+                const newColor = formData.get('primaryColor');
+
+                const settingsToSave = {
+                    primaryColor: newColor
+                };
+
+                // Persist settings via backend (admin-only)
+                if (socket && state.token) {
+                    // Per BACKEND_SCHEMA, payload must be { updates } only — auth must be provided via socket.handshake.auth.token
+                    socket.emit('settings:update', { updates: settingsToSave }, (response) => {
+                        if (response?.success) {
+                            alert("Site settings updated successfully! Page theme updated.");
+                            setState({ settings: response.settings || settingsToSave });
+                        } else {
+                            alert("Error updating settings: " + (response?.message || 'Unknown error'));
+                        }
+                        button.disabled = false;
+                        button.innerHTML = `${ICONS.Save()} <span class="ml-2">Save Theme</span>`;
+                    });
+                } else {
+                    // Fallback to local update (shouldn't happen for admin)
+                    alert("Site settings updated locally. Backend sync unavailable.");
+                    setState({ settings: settingsToSave });
+                    button.disabled = false;
+                    button.innerHTML = `${ICONS.Save()} <span class="ml-2">Save Theme</span>`;
+                }
+            } catch (e) {
+                console.error("Error saving settings:", e);
+                alert("Error saving settings: " + e.message);
+            } finally {
+                button.disabled = false;
+                button.innerHTML = `${ICONS.Save()} <span class="ml-2">Save Theme</span>`;
+            }
+        }
+
+        async function handleSaveContent(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const title = formData.get('title');
+            // This is mock saving, as in the React original
+            alert(`Content for "${title}" saved! (Data is mock-saved only)`);
+            setState({ currentSubTab: null });
+        }
+
+        window.handleColorChange = (event, type = 'color') => {
+            const newColor = event.target.value;
+            // Instantly update the UI
+            setState({ settings: { ...state.settings, primaryColor: newColor } });
+
+            // Sync the other input
+            if (type === 'color') {
+                document.getElementById('primaryColorHex').value = newColor;
+            } else {
+                // No need to update the color picker, it's bound by the re-render
+            }
+        };
+
+        function setupIconPlaceholders() {
+            document.getElementById('icon-dashboard').innerHTML = ICONS.LayoutGrid();
+            document.getElementById('icon-prizes').innerHTML = ICONS.Gift();
+            document.getElementById('icon-draws').innerHTML = ICONS.Zap();
+            document.getElementById('icon-donations').innerHTML = ICONS.Heart();
+            document.getElementById('icon-orders').innerHTML = ICONS.ShoppingCart();
+            document.getElementById('icon-content').innerHTML = ICONS.FileText();
+            document.getElementById('icon-settings').innerHTML = ICONS.Settings();
+            document.getElementById('icon-logout').innerHTML = ICONS.Users();
+        }
+
+        // --- Draw Management Filter Functions ---
+        let drawsFilterDebounceTimer = null;
+        
+        // Handle search input - don't filter immediately, wait for user to stop typing
+        window.handleDrawsSearchInput = function(value) {
+            // Clear existing timer
+            if (drawsFilterDebounceTimer) {
+                clearTimeout(drawsFilterDebounceTimer);
+            }
+            
+            // Don't update state yet - wait for user to stop typing
+            // Debounce the filtering by 500ms after user stops typing
+            drawsFilterDebounceTimer = setTimeout(() => {
+                // Now update the filter state and update table
+                setState({
+                    drawsFilter: {
+                        ...state.drawsFilter,
+                        search: value
+                    }
+                });
+                
+                // Only update the table rows, don't re-render the entire page
+                if (state.currentPage === 'draws') {
+                    updateDrawsTableOnly();
+                }
+            }, 500); // Wait 500ms after user stops typing before filtering
+        };
+        
+        window.updateDrawsFilter = function(key, value) {
+            // For status dropdown, update immediately (no debounce needed)
+            if (key === 'status') {
+                setState({
+                    drawsFilter: {
+                        ...state.drawsFilter,
+                        [key]: value
+                    }
+                });
+                renderApp();
+            }
+            // Note: search is handled separately by handleDrawsSearchInput
+        };
+        
+        // Function to update only the table rows without touching the input
+        function updateDrawsTableOnly() {
+            const { users, winners, drawsFilter } = state;
+            const getUserWinnerInfo = (userId) => {
+                return winners.find(w => w.user && (w.user._id === userId || w.user === userId));
+            };
+            
+            // Filter users (same logic as renderDrawManagement)
+            const filteredUsers = users.filter(user => {
+                const winnerInfo = getUserWinnerInfo(user._id);
+                const isWinner = !!winnerInfo;
+                
+                const searchTerm = (drawsFilter.search || '').toLowerCase().trim();
+                if (searchTerm) {
+                    const nameMatch = (user.fullName || '').toLowerCase().includes(searchTerm);
+                    const emailMatch = (user.emailAddress || '').toLowerCase().includes(searchTerm);
+                    if (!nameMatch && !emailMatch) return false;
+                }
+                
+                if (drawsFilter.status === 'winner' && !isWinner) return false;
+                if (drawsFilter.status === 'regular' && isWinner) return false;
+                
+                return true;
+            });
+            
+            // Update only the table tbody
+            const tbody = document.querySelector('table tbody');
+            if (tbody) {
+                const primaryColor = state.settings.primaryColor || '#00C853';
+                tbody.innerHTML = filteredUsers.length === 0 
+                    ? `<tr><td colSpan="5" class="py-6 text-center text-gray-500">${users.length === 0 ? 'No users found.' : 'No users match the current filters.'}</td></tr>`
+                    : filteredUsers.map(user => {
+                        const winnerInfo = getUserWinnerInfo(user._id);
+                        const isWinner = !!winnerInfo;
+                        return `
+                            <tr key="${user._id}" class="hover:bg-gray-50">
+                                <td class="py-3 px-4 text-sm font-medium text-gray-900">
+                                    ${user.fullName || 'N/A'}
+                                </td>
+                                <td class="py-3 px-4 text-sm text-gray-600">
+                                    ${user.emailAddress || 'N/A'}
+                                </td>
+                                <td class="py-3 px-4 text-center">
+                                    ${isWinner 
+                                        ? '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Winner</span>'
+                                        : '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600">Regular</span>'
+                                    }
+                                </td>
+                                <td class="py-3 px-4 text-center text-sm text-gray-600">
+                                    ${winnerInfo && winnerInfo.prize ? (winnerInfo.prize.name || 'N/A') : '-'}
+                                </td>
+                                <td class="py-3 px-4 text-right">
+                                    <div class="flex items-center justify-end space-x-2">
+                                        <button 
+                                            onclick="handleMakeWinner('${user._id}', ${isWinner ? `'${winnerInfo._id}'` : 'null'})" 
+                                            class="px-3 py-1.5 text-white font-semibold rounded-lg hover:opacity-90 text-sm flex items-center"
+                                            style="background-color: ${primaryColor}"
+                                        >
+                                            ${isWinner ? ICONS.Edit() : ICONS.Trophy()}
+                                            <span class="ml-1">${isWinner ? 'Edit' : 'Make Winner'}</span>
+                                        </button>
+                                        ${isWinner ? `
+                                            <button 
+                                                onclick="handleUnassignWinner('${winnerInfo._id}', '${user.fullName || user.emailAddress || 'User'}')" 
+                                                class="px-3 py-1.5 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 text-sm flex items-center"
+                                                title="Unassign Winner"
+                                            >
+                                                ${ICONS.Trash2()}
+                                                <span class="ml-1">Unassign</span>
+                                            </button>
+                                        ` : ''}
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                
+                // Update filter summary
+                const summaryEl = document.querySelector('.filter-summary-text');
+                if (summaryEl) {
+                    summaryEl.innerHTML = `Showing <span class="font-semibold text-gray-900">${filteredUsers.length}</span> of <span class="font-semibold text-gray-900">${users.length}</span> users
+                        ${drawsFilter.search ? `<span class="text-gray-500">• Searching: "${drawsFilter.search}"</span>` : ''}
+                        ${drawsFilter.status !== 'all' ? `<span class="text-gray-500">• Filter: ${drawsFilter.status === 'winner' ? 'Winners' : 'Regular Users'}</span>` : ''}`;
+                }
+            }
+        }
+
+        window.clearDrawsFilters = function() {
+            // Clear any pending debounce timer
+            if (drawsFilterDebounceTimer) {
+                clearTimeout(drawsFilterDebounceTimer);
+            }
+            
+            // Reset local state
+            drawsFilterLocalState = { search: '', status: 'all' };
+            
+            setState({
+                drawsFilter: {
+                    search: '',
+                    status: 'all'
+                }
+            });
+            renderApp();
+        };
+
+        // --- Login Modal Functions ---
+        window.showLoginModal = function showLoginModal() {
+            const modal = document.getElementById('admin-login-modal');
+            const content = document.getElementById('login-modal-content');
+            if (modal && content) {
+                modal.style.display = 'flex';
+                // Animate in
+                setTimeout(() => {
+                    content.style.transform = 'scale(1)';
+                    content.style.opacity = '1';
+                }, 10);
+            }
+        };
+
+        window.hideLoginModal = function hideLoginModal() {
+            const modal = document.getElementById('admin-login-modal');
+            const content = document.getElementById('login-modal-content');
+            if (modal && content) {
+                content.style.transform = 'scale(0.95)';
+                content.style.opacity = '0';
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                }, 300);
+            }
+        };
+
+        function showLoginError(message) {
+            const errorDiv = document.getElementById('login-error');
+            const errorText = document.getElementById('login-error-text');
+            if (errorDiv && errorText) {
+                errorText.textContent = message;
+                errorDiv.classList.remove('hidden');
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    errorDiv.classList.add('hidden');
+                }, 5000);
+            }
+        }
+
+        function hideLoginError() {
+            const errorDiv = document.getElementById('login-error');
+            if (errorDiv) {
+                errorDiv.classList.add('hidden');
+            }
+        }
+
+        window.togglePasswordVisibility = function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('admin-password');
+            const eyeIcon = document.getElementById('password-eye');
+            if (passwordInput && eyeIcon) {
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    eyeIcon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+                } else {
+                    passwordInput.type = 'password';
+                    eyeIcon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+                }
+            }
+        }
+
+        window.handleAdminLogin = function handleAdminLogin(event) {
+            event.preventDefault();
+            hideLoginError();
+            
+            const emailInput = document.getElementById('admin-email');
+            const passwordInput = document.getElementById('admin-password');
+            const submitBtn = document.getElementById('login-submit-btn');
+            const btnText = document.getElementById('login-btn-text');
+            const btnSpinner = document.getElementById('login-btn-spinner');
+            
+            const email = emailInput?.value?.trim().toLowerCase();
+            const password = passwordInput?.value;
+
+            if (!email || !password) {
+                showLoginError('Please enter both email and password');
+                return;
+            }
+
+            if (!socket) {
+                showLoginError('Not connected to server. Please wait...');
+                return;
+            }
+
+            if (!socket.connected) {
+                showLoginError('Socket not connected. Please wait for connection...');
+                console.warn('[APP] Socket not connected, current state:', socket.connected);
+                return;
+            }
+
+            // Show loading state
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                if (btnText) btnText.textContent = 'Signing in...';
+                if (btnSpinner) btnSpinner.classList.remove('hidden');
+            }
+
+            // Emit login event
+            console.log('[APP] Submitting admin login for email:', email);
+            console.log('[APP] Socket connected:', socket.connected);
+            console.log('[APP] Socket ID:', socket.id);
+            
+            // Set a timeout to reset button if no response after 10 seconds
+            const timeoutId = setTimeout(() => {
+                console.warn('[APP] Login timeout - no response received');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    if (btnText) btnText.textContent = 'Sign In';
+                    if (btnSpinner) btnSpinner.classList.add('hidden');
+                }
+                showLoginError('Login timeout. Please check your connection and try again.');
+            }, 10000);
+            
+            // Store timeout ID to clear it when response is received
+            window.loginTimeoutId = timeoutId;
+            
+            socket.emit('admin:login', { email: email, password: password });
+        };
+
+        // Update login response handler to use toast and hide modal
+        const originalLoginHandler = socket?.on;
+        
+        // --- App Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            setupIconPlaceholders();
+
+            // Initialize toast container
+            (function initToastContainer() {
+                let container = document.getElementById('toast-container');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.id = 'toast-container';
+                    document.body.appendChild(container);
+                }
+                Object.assign(container.style, {
+                    position: 'fixed',
+                    top: '16px',
+                    right: '16px',
+                    zIndex: '999999',
+                    pointerEvents: 'none',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    maxWidth: '400px'
+                });
+                console.log('[APP] Toast container initialized');
+            })();
+
+            // Try to restore token from localStorage
+            const savedToken = localStorage.getItem('adminToken');
+            if (savedToken) {
+                console.log('[APP] Found saved admin token, restoring session');
+                setState({ token: savedToken });
+            }
+
+            // Initialize socket
+            console.log('[APP] Initializing socket connection to:', SOCKET_URL);
+            initializeSocket();
+
+            // Show login modal if no token
+            if (!savedToken) {
+                // Wait for socket connection before showing modal
+                const checkConnection = setInterval(() => {
+                    if (socket && socket.connected) {
+                        clearInterval(checkConnection);
+                        console.log('[APP] Socket connected, showing admin login modal');
+                        showLoginModal();
+                    } else if (socket && !socket.connected) {
+                        // Wait a bit more
+                        console.log('[APP] Waiting for socket connection...');
+                    }
+                }, 500);
+                
+                // Fallback: show modal after 5 seconds even if not connected
+                setTimeout(() => {
+                    clearInterval(checkConnection);
+                    if (!state.isAuthenticated) {
+                        console.log('[APP] Showing admin login modal (timeout)');
+                        showLoginModal();
+                    }
+                }, 5000);
+            }
+        });
+
+    </script>
+    <script defer
+        src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015"
+        integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ=="
+        data-cf-beacon='{"version":"2024.11.0","token":"c03bad003058479a98a01ddc8a37910c","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}'
+        crossorigin="anonymous"></script>
+</body>
+
+</html>
