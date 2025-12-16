@@ -25,12 +25,40 @@ function autoLoadModels() {
 
 function autoLoadSocketEvents(io, socket) {
   const eventsDir = path.join(__dirname, '../socket/events');
+  const logger = require('../utils/logger');
+  
   fs.readdirSync(eventsDir).forEach((file) => {
     if (file.endsWith('.js')) {
-      const event = require(path.join(eventsDir, file));
-      if (typeof event === 'function') {
-        event(io, socket);
-        console.log(`💬 Loaded socket event: ${file}`);
+      try {
+        const eventPath = path.join(eventsDir, file);
+        // Clear require cache to allow hot-reloading in development
+        delete require.cache[require.resolve(eventPath)];
+        const event = require(eventPath);
+        
+        if (typeof event === 'function') {
+          try {
+            event(io, socket);
+            console.log(`💬 Loaded socket event: ${file}`);
+          } catch (err) {
+            logger.error('socket.event.init.error', {
+              file,
+              message: err.message,
+              stack: err.stack
+            });
+            console.error(`❌ Error initializing socket event ${file}:`, err.message);
+            // Continue loading other events even if one fails
+          }
+        } else {
+          console.warn(`⚠️  Socket event ${file} does not export a function`);
+        }
+      } catch (err) {
+        logger.error('socket.event.load.error', {
+          file,
+          message: err.message,
+          stack: err.stack
+        });
+        console.error(`❌ Error loading socket event ${file}:`, err.message);
+        // Continue loading other events even if one fails
       }
     }
   });

@@ -3,17 +3,24 @@ const { autoLoadSocketEvents } = require('./autoloader');
 function initSocket(io) {
   io.on('connection', (socket) => {
     const logger = require('../utils/logger');
-    logger.info('socket.connection', { socketId: socket.id });
     
-    // Handle socket-level errors
-    socket.on('error', (err) => {
-      logger.error('socket.error', {
-        socketId: socket.id,
-        message: err.message,
-        stack: err.stack
+    // Wrap entire connection handler in try-catch to prevent unhandled errors
+    try {
+      logger.info('socket.connection', { socketId: socket.id });
+      console.log(`[Socket.IO] New connection: ${socket.id}`);
+      
+      // Handle socket-level errors
+      socket.on('error', (err) => {
+        logger.error('socket.error', {
+          socketId: socket.id,
+          message: err.message,
+          stack: err.stack
+        });
+        console.error(`[Socket.IO] Socket error for ${socket.id}:`, err.message);
+        if (err.stack) {
+          console.error(`[Socket.IO] Error stack:`, err.stack);
+        }
       });
-      console.error(`[Socket.IO] Socket error for ${socket.id}:`, err.message);
-    });
     
     // Instrument socket and io to log incoming events and outgoing emits.
     try {
@@ -86,6 +93,7 @@ function initSocket(io) {
     // Load socket event handlers - wrap in try-catch to prevent connection failures
     try {
       autoLoadSocketEvents(io, socket);
+      console.log(`✅ Successfully loaded all socket events for ${socket.id}`);
     } catch (err) {
       logger.error('socket.events.load.failed', {
         socketId: socket.id,
@@ -93,14 +101,43 @@ function initSocket(io) {
         stack: err.stack
       });
       console.error(`[Socket.IO] Failed to load events for ${socket.id}:`, err.message);
-      // Still allow connection, but socket won't have event handlers
-      socket.emit('error', { message: 'Failed to initialize socket handlers' });
+      console.error(`[Socket.IO] Error stack:`, err.stack);
+      // Don't emit error to client - just log it and allow connection to continue
+      // Some events may have loaded successfully
     }
 
-    socket.on('disconnect', () => {
-      const logger = require('../utils/logger');
-      logger.info('socket.disconnected', { socketId: socket.id });
-    });
+      socket.on('disconnect', () => {
+        const logger = require('../utils/logger');
+        logger.info('socket.disconnected', { socketId: socket.id });
+        console.log(`[Socket.IO] Disconnected: ${socket.id}`);
+      });
+    } catch (err) {
+      // Catch any unhandled errors during connection setup
+      logger.error('socket.connection.setup.error', {
+        socketId: socket.id,
+        message: err.message,
+        stack: err.stack
+      });
+      console.error(`[Socket.IO] Fatal error during connection setup for ${socket.id}:`, err.message);
+      console.error(`[Socket.IO] Error stack:`, err.stack);
+      
+      // Try to emit error to client before disconnecting
+      try {
+        socket.emit('error', { 
+          message: 'Server error during connection setup',
+          code: 'CONNECTION_SETUP_ERROR'
+        });
+      } catch (e) {
+        // Ignore if we can't emit
+      }
+      
+      // Disconnect the socket
+      try {
+        socket.disconnect(true);
+      } catch (e) {
+        // Ignore disconnect errors
+      }
+    }
   });
 }
 

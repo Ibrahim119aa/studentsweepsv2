@@ -35,15 +35,26 @@ const io = new Server(server, {
 // Handle connection-level errors (before socket is created)
 io.on('connection_error', (err) => {
   const logger = require('./utils/logger');
-  logger.error('socket.connection_error', {
+  const errorDetails = {
     message: err.message,
+    type: err.type,
+    description: err.description,
+    context: err.context,
     req: err.req ? {
       headers: err.req.headers,
-      url: err.req.url
-    } : null,
-    context: err.context || null
-  });
+      url: err.req.url,
+      method: err.req.method
+    } : null
+  };
+  
+  logger.error('socket.connection_error', errorDetails);
   console.error('[Socket.IO] Connection error:', err.message);
+  console.error('[Socket.IO] Error details:', JSON.stringify(errorDetails, null, 2));
+  
+  // If it's a server-side error, log the stack trace
+  if (err.stack) {
+    console.error('[Socket.IO] Error stack:', err.stack);
+  }
 });
 
 (async () => {
