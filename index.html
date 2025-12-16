@@ -350,6 +350,33 @@
             background-color: #d1fae5;
         }
 
+        #main-content {
+            background-image: url('images/homepage.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            min-height: calc(100vh - 200px);
+        }
+
+        /* Optional: Add overlay for better text readability if needed */
+        #main-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.85);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        #main-content > * {
+            position: relative;
+            z-index: 1;
+        }
+
         .toggle-bg:after {
             content: '';
             position: absolute;
@@ -446,7 +473,7 @@
     </div>
 
     <!-- Main Content Area -->
-    <main id="main-content" class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10"></main>
+    <main id="main-content" class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative"></main>
 
     <!-- Footer -->
     <footer class="mt-16">
