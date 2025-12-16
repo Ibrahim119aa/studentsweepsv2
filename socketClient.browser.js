@@ -6,9 +6,6 @@ window.SocketClient = (function() {
   const TOKEN_KEY = 'sweepstackz_token';
   const USER_KEY = 'sweepstackz_user';
 
-  alert("vxcvxcv");
-  
-
   let socket = null;
   let isConnected = false;
   let isInitializing = false; // Flag to prevent concurrent initialization

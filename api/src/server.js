@@ -29,7 +29,12 @@ const io = new Server(server, {
   transports: ['polling', 'websocket'],
   allowEIO3: true, // Allow Engine.IO v3 clients for backward compatibility
   pingTimeout: 60000,
-  pingInterval: 25000
+  pingInterval: 25000,
+  // Add connection middleware to catch errors early
+  allowRequest: (req, callback) => {
+    // Allow all connections - we'll handle errors in the connection handler
+    callback(null, true);
+  }
 });
 
 // Handle connection-level errors (before socket is created)

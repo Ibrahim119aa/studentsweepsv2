@@ -14,15 +14,35 @@ try {
 }
 
 function initSocket(io) {
+  // Use connection middleware to catch errors before connection is established
+  io.use((socket, next) => {
+    // Allow all connections - errors will be handled in connection handler
+    console.log(`[Socket.IO] Connection middleware - allowing connection`);
+    try {
+      next();
+    } catch (err) {
+      console.error(`[Socket.IO] Middleware error:`, err);
+      next(err); // Pass error but don't break
+    }
+  });
+  
   io.on('connection', (socket) => {
-    // Wrap entire connection handler in try-catch to prevent unhandled errors
+    // CRITICAL: Wrap entire connection handler in try-catch
+    // Any uncaught error here will cause "server error" response
     try {
       try {
         logger.info('socket.connection', { socketId: socket.id });
       } catch (e) {
         // Logger error shouldn't break connection
       }
+      console.log(`[Socket.IO] ========================================`);
       console.log(`[Socket.IO] New connection: ${socket.id}`);
+      console.log(`[Socket.IO] Connection handshake:`, {
+        auth: socket.handshake.auth,
+        headers: socket.handshake.headers ? Object.keys(socket.handshake.headers) : null,
+        url: socket.handshake.url
+      });
+      console.log(`[Socket.IO] ========================================`);
       
       // Handle socket-level errors
       socket.on('error', (err) => {
@@ -110,6 +130,7 @@ function initSocket(io) {
     }
 
     // Load socket event handlers - wrap in try-catch to prevent connection failures
+    // CRITICAL: This must not throw or the connection will fail with "server error"
     try {
       console.log(`[Socket.IO] Loading events for ${socket.id}...`);
       autoLoadSocketEvents(io, socket);
@@ -126,12 +147,12 @@ function initSocket(io) {
       }
       console.error(`[Socket.IO] Failed to load events for ${socket.id}:`, err.message);
       console.error(`[Socket.IO] Error stack:`, err.stack);
-      // Don't emit error to client - just log it and allow connection to continue
-      // Some events may have loaded successfully
+      // CRITICAL: Don't throw - allow connection to continue even if events fail
       // Connection should still work even if some events fail to load
     }
     
-    // Ensure connection is marked as successful even if some events failed
+    // CRITICAL: Ensure connection is marked as successful even if some events failed
+    // This must complete successfully or the connection will fail
     console.log(`[Socket.IO] Connection setup complete for ${socket.id}`);
     
     // Explicitly acknowledge connection is ready
@@ -139,9 +160,15 @@ function initSocket(io) {
     try {
       // Send a test message to confirm connection is working
       socket.emit('connection:ready', { socketId: socket.id, timestamp: new Date().toISOString() });
+      console.log(`[Socket.IO] Sent connection:ready to ${socket.id}`);
     } catch (e) {
       console.warn(`[Socket.IO] Could not send connection:ready for ${socket.id}:`, e.message);
+      // Don't throw - connection should still work
     }
+    
+    // CRITICAL: Connection handler must complete successfully
+    // Any uncaught error here will cause "server error" response
+    console.log(`[Socket.IO] Connection handler completed successfully for ${socket.id}`);
 
       socket.on('disconnect', () => {
         try {

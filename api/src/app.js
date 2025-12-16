@@ -53,6 +53,17 @@ app.get('/api/socket-debug', (req, res) => {
   }
 });
 
+// Endpoint to check server logs for recent connection errors
+app.get('/api/socket-errors', (req, res) => {
+  // This is a placeholder - in production, you'd want to use a proper logging system
+  // For now, we'll just return a message indicating where to check logs
+  res.json({
+    message: 'Check server console logs for Socket.IO connection errors',
+    note: 'Look for lines starting with [Socket.IO] in your server logs',
+    recentErrors: 'Server-side error logging is configured. Check your server console output.'
+  });
+});
+
 // Load routes automatically
 autoLoadRoutes(app);
 
