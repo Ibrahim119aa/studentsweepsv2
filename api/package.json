@@ -6,7 +6,8 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "seed-admin": "node src/loaders/seedAdmin.js",
-    "test:socket": "node test-socket-connection.js"
+    "test:socket": "node test-socket-connection.js",
+    "test:socket:paths": "node test-socket-paths.js"
   },
   "dependencies": {
     "@faker-js/faker": "^8.0.2",
