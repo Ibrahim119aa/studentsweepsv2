@@ -6,6 +6,9 @@ window.SocketClient = (function() {
   const TOKEN_KEY = 'sweepstackz_token';
   const USER_KEY = 'sweepstackz_user';
 
+  alert("vxcvxcv");
+  
+
   let socket = null;
   let isConnected = false;
   const listeners = {};
