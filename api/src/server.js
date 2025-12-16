@@ -13,6 +13,10 @@ const server = http.createServer(app);
 // socket.io should use default path '/socket.io' on server side.
 // The reverse proxy will make it available at /api/socket.io
 // If your Node.js server is directly accessible at /api, use path: '/api/socket.io'
+//
+// To test the socket connection:
+//   npm run test:socket
+//   Or: node test-socket-connection.js https://studentsweeps.com/api
 const io = new Server(server, {
   path: process.env.SOCKET_IO_PATH || '/api/socket.io', // Default: '/socket.io', or '/api/socket.io' if needed
   cors: {

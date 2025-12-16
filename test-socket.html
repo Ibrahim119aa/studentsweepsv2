@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket.IO Connection Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+        .status.connecting {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border-left: 4px solid #2196F3;
+        }
+        button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1976D2;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+        }
+        .log-entry.success {
+            color: #28a745;
+        }
+        .log-entry.error {
+            color: #dc3545;
+        }
+        .log-entry.info {
+            color: #17a2b8;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔌 Socket.IO Connection Test</h1>
+        <p>Test connection to: <strong id="socketUrl">https://studentsweeps.com/api</strong></p>
+        
+        <div class="info">
+            <strong>Socket Path:</strong> /api/socket.io<br>
+            <strong>Status:</strong> <span id="status">Not Connected</span>
+        </div>
+
+        <div id="statusDiv" class="status connecting" style="display: none;">
+            Connecting...
+        </div>
+
+        <div>
+            <label>Custom URL (optional):</label>
+            <input type="text" id="customUrl" placeholder="https://studentsweeps.com/api" value="https://studentsweeps.com/api">
+            <button onclick="testConnection()">Test Connection</button>
+            <button onclick="disconnectSocket()" id="disconnectBtn" disabled>Disconnect</button>
+            <button onclick="clearLog()">Clear Log</button>
+        </div>
+
+        <div class="log" id="log"></div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    <script>
+        let socket = null;
+        const logDiv = document.getElementById('log');
+        const statusDiv = document.getElementById('statusDiv');
+        const statusSpan = document.getElementById('status');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+
+        function log(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        function clearLog() {
+            logDiv.innerHTML = '';
+        }
+
+        function updateStatus(status, message) {
+            statusSpan.textContent = status;
+            statusDiv.style.display = 'block';
+            statusDiv.className = `status ${status.toLowerCase()}`;
+            statusDiv.textContent = message;
+        }
+
+        function testConnection() {
+            const url = document.getElementById('customUrl').value || 'https://studentsweeps.com/api';
+            document.getElementById('socketUrl').textContent = url;
+            
+            if (socket && socket.connected) {
+                log('Already connected. Disconnecting first...', 'info');
+                socket.disconnect();
+            }
+
+            clearLog();
+            updateStatus('connecting', 'Connecting...');
+            disconnectBtn.disabled = true;
+
+            log(`Connecting to: ${url}`, 'info');
+            log('Socket path: /api/socket.io', 'info');
+
+            socket = io(url, {
+                path: '/api/socket.io',
+                transports: ['polling', 'websocket'],
+                reconnection: false,
+                timeout: 10000
+            });
+
+            socket.on('connect', () => {
+                log('✅ CONNECTED!', 'success');
+                log(`Socket ID: ${socket.id}`, 'success');
+                log(`Transport: ${socket.io.engine.transport.name}`, 'success');
+                updateStatus('connected', `Connected (ID: ${socket.id})`);
+                disconnectBtn.disabled = false;
+
+                // Test emit
+                log('Testing emit: auth:status', 'info');
+                socket.emit('auth:status', { token: null }, (response) => {
+                    if (response) {
+                        log(`Response: ${JSON.stringify(response)}`, 'success');
+                    }
+                });
+            });
+
+            socket.on('connect_error', (error) => {
+                log(`❌ Connection Error: ${error.message}`, 'error');
+                log(`Type: ${error.type || 'N/A'}`, 'error');
+                log(`Description: ${error.description || 'N/A'}`, 'error');
+                updateStatus('error', `Error: ${error.message}`);
+                disconnectBtn.disabled = true;
+            });
+
+            socket.on('disconnect', (reason) => {
+                log(`Disconnected: ${reason}`, 'info');
+                updateStatus('connecting', 'Disconnected');
+                disconnectBtn.disabled = true;
+            });
+
+            socket.on('error', (error) => {
+                log(`Socket Error: ${error.message || error}`, 'error');
+            });
+
+            socket.on('auth:status:response', (data) => {
+                log(`Received auth:status:response: ${JSON.stringify(data)}`, 'success');
+            });
+        }
+
+        function disconnectSocket() {
+            if (socket) {
+                socket.disconnect();
+                log('Manually disconnected', 'info');
+            }
+        }
+
+        // Auto-test on load
+        window.addEventListener('load', () => {
+            setTimeout(() => testConnection(), 500);
+        });
+    </script>
+</body>
+</html>
+
