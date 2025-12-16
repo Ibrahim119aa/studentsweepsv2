@@ -138,6 +138,11 @@ window.SocketClient = (function() {
     socket.on('disconnect', onDisconnect);
     socket.on('connect_error', onConnectError);
     socket.on('error', onError);
+    
+    // Listen for server connection ready event
+    socket.on('connection:ready', (data) => {
+      console.log('✅ [SocketClient] Server confirmed connection ready:', data);
+    });
 
     // Auth events
     socket.on('auth:login:success', onAuthLoginSuccess);

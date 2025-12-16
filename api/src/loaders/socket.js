@@ -133,6 +133,15 @@ function initSocket(io) {
     
     // Ensure connection is marked as successful even if some events failed
     console.log(`[Socket.IO] Connection setup complete for ${socket.id}`);
+    
+    // Explicitly acknowledge connection is ready
+    // This helps ensure the connection is established even if there were errors
+    try {
+      // Send a test message to confirm connection is working
+      socket.emit('connection:ready', { socketId: socket.id, timestamp: new Date().toISOString() });
+    } catch (e) {
+      console.warn(`[Socket.IO] Could not send connection:ready for ${socket.id}:`, e.message);
+    }
 
       socket.on('disconnect', () => {
         try {
