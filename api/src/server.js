@@ -47,9 +47,9 @@ io.on('connection_error', (err) => {
     } : null
   };
   
-  logger.error('socket.connection_error1111', errorDetails);
-  console.error('[Socket.IO] Connection error:1111', err.message);
-  console.error('[Socket.IO] Error details:', JSON.stringify(errorDetails, null, 2));
+  // logger.error('socket.connection_error1111', errorDetails);
+  // console.error('[Socket.IO] Connection error:1111', err.message);
+  // console.error('[Socket.IO] Error details:', JSON.stringify(errorDetails, null, 2));
   
   // If it's a server-side error, log the stack trace
   if (err.stack) {
