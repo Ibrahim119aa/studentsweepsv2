@@ -759,7 +759,7 @@
     </div>
 
 
-  
+
 
     <!-- Socket.IO client + SocketClient library -->
     <script src="https://cdn.socket.io/4.6.1/socket.io.min.js" crossorigin="anonymous"></script>
@@ -771,25 +771,25 @@
             console.log('[index.html] Attempting to initialize SocketClient...');
             console.log('[index.html] Socket.io loaded:', typeof window.io !== 'undefined');
             console.log('[index.html] SocketClient loaded:', typeof window.SocketClient !== 'undefined');
-            
+
             // Check if both are ready
             if (!window.io) {
                 console.warn('[index.html] Socket.io not ready yet, waiting...');
                 setTimeout(initializeSocketClient, 100);
                 return;
             }
-            
+
             if (!window.SocketClient) {
                 console.error('[index.html] SocketClient not found! Check if socketClient.browser.js loaded correctly.');
                 return;
             }
-            
+
             // Check if already initialized
             if (window.SocketClient.isConnected && window.SocketClient.isConnected()) {
                 console.log('[index.html] SocketClient already connected, skipping init');
                 return;
             }
-            
+
             console.log('[index.html] Both ready, initializing SocketClient...');
             try {
                 window.SocketClient.init();
@@ -797,7 +797,7 @@
                 console.error('[index.html] Error during SocketClient.init():', err);
             }
         }
-        
+
         // Try initialization when DOM is ready
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initializeSocketClient);

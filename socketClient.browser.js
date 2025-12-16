@@ -132,20 +132,26 @@ window.SocketClient = (function() {
     console.log('[SocketClient] Full endpoint URL:', SOCKET_URL + '/api/socket.io');
     console.log('[SocketClient] Configuration: Base domain with /api/socket.io path (matches working test-socket.html)');
 
-    // Working configuration (matches test-socket.html when using base domain):
-    // URL: https://studentsweeps.com (base domain, NOT /api)
+    // Match test-socket.html configuration exactly (which works):
+    // URL: https://studentsweeps.com (base domain)
     // Path: /api/socket.io
+    // Key differences from test-socket.html:
+    // - test-socket.html: reconnection: false, no auth
+    // - We keep auth for token support, but match other settings
     const socketOptions = {
       path: '/api/socket.io', // Path to socket.io endpoint
-      auth: t ? { token: t } : {},
-      reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      reconnectionAttempts: 5,
       transports: ['polling', 'websocket'], // Match server transports
-      forceNew: false, // Allow connection reuse
-      timeout: 20000 // 20 second timeout
+      reconnection: false, // Match test-socket.html - disable auto-reconnection initially
+      timeout: 10000 // Match test-socket.html timeout
     };
+    
+    // Only add auth if token exists (to match test-socket.html behavior when no token)
+    if (t) {
+      socketOptions.auth = { token: t };
+      console.log('[SocketClient] Adding auth token to connection');
+    } else {
+      console.log('[SocketClient] No token, connecting without auth (matches test-socket.html)');
+    }
     
     console.log('[SocketClient] Socket options:', JSON.stringify(socketOptions, null, 2));
     console.log('[SocketClient] Socket.io library version:', window.io?.version || 'unknown');
@@ -246,6 +252,7 @@ window.SocketClient = (function() {
   // Socket lifecycle handlers
   function onConnect() {
     isConnected = true;
+    isInitializing = false; // Reset flag on successful connection
     console.log('✅ [SocketClient] ========================================');
     console.log('✅ [SocketClient] CONNECTED SUCCESSFULLY!');
     console.log('✅ [SocketClient] URL:', SOCKET_URL);
@@ -253,6 +260,11 @@ window.SocketClient = (function() {
     console.log('✅ [SocketClient] Transport:', socket.io.engine.transport.name);
     console.log('✅ [SocketClient] Connection status: CONNECTED ✓');
     console.log('✅ [SocketClient] ========================================');
+    
+    // Enable reconnection now that initial connection is successful
+    if (socket && socket.io) {
+      socket.io.reconnect();
+    }
     
     // Process any pending emits from before connection
     processPendingEmits();
@@ -289,6 +301,9 @@ window.SocketClient = (function() {
   }
 
   function onConnectError(error) {
+    // Reset initialization flag on error so we can retry
+    isInitializing = false;
+    
     // Log detailed error information
     const errorDetails = {
       message: error?.message || 'Unknown connection error',
@@ -297,7 +312,6 @@ window.SocketClient = (function() {
       context: error?.context || null,
       data: error?.data || null
     };
-    
     
     console.error('❌ [SocketClient] ========================================');
     console.error('❌ [SocketClient] CONNECTION ERROR!');
