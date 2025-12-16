@@ -9,7 +9,12 @@ const { initSocket } = require('./loaders/socket');
 const PORT = process.env.PORT || 4000;
 
 const server = http.createServer(app);
+// Note: If your backend is served under /api via reverse proxy (nginx),
+// socket.io should use default path '/socket.io' on server side.
+// The reverse proxy will make it available at /api/socket.io
+// If your Node.js server is directly accessible at /api, use path: '/api/socket.io'
 const io = new Server(server, {
+  path: process.env.SOCKET_IO_PATH || '/socket.io', // Default: '/socket.io', or '/api/socket.io' if needed
   cors: {
     origin: '*',
     methods: ['GET', 'POST'],

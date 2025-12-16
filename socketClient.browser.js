@@ -91,14 +91,24 @@ window.SocketClient = (function() {
 
     const t = token.get();
     console.log('[SocketClient] Initializing with token:', t ? 'present' : 'absent');
+    console.log('[SocketClient] Connecting to:', SOCKET_URL);
+    console.log('[SocketClient] Socket.io path:', '/api/socket.io');
 
-    socket = window.io(SOCKET_URL, {
+    // If backend is served under /api, socket.io path should be /api/socket.io
+    // If using reverse proxy, the path on server is /socket.io but accessible at /api/socket.io
+    const socketOptions = {
+      path: '/api/socket.io', // Client-side path: /api/socket.io (matches server accessible path)
       auth: t ? { token: t } : {},
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
-      reconnectionAttempts: 5
-    });
+      reconnectionAttempts: 5,
+      transports: ['polling', 'websocket'] // Match server transports
+    };
+    
+    console.log('[SocketClient] Socket options:', socketOptions);
+    
+    socket = window.io(SOCKET_URL, socketOptions);
 
     setupSocketListeners();
     return true;
