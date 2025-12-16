@@ -40,12 +40,17 @@ function autoLoadSocketEvents(io, socket) {
             event(io, socket);
             console.log(`💬 Loaded socket event: ${file}`);
           } catch (err) {
-            logger.error('socket.event.init.error', {
-              file,
-              message: err.message,
-              stack: err.stack
-            });
+            try {
+              logger.error('socket.event.init.error', {
+                file,
+                message: err.message,
+                stack: err.stack
+              });
+            } catch (e) {
+              // Logger error shouldn't break error handling
+            }
             console.error(`❌ Error initializing socket event ${file}:`, err.message);
+            console.error(`   Error stack:`, err.stack);
             // Continue loading other events even if one fails
           }
         } else {

@@ -1,21 +1,40 @@
 const { autoLoadSocketEvents } = require('./autoloader');
 
+// Require logger at module level to avoid issues during connection
+let logger;
+try {
+  logger = require('../utils/logger');
+} catch (e) {
+  console.warn('[Socket.IO] Logger not available, using console only');
+  logger = {
+    info: () => {},
+    error: () => {},
+    warn: () => {}
+  };
+}
+
 function initSocket(io) {
   io.on('connection', (socket) => {
-    const logger = require('../utils/logger');
-    
     // Wrap entire connection handler in try-catch to prevent unhandled errors
     try {
-      logger.info('socket.connection', { socketId: socket.id });
+      try {
+        logger.info('socket.connection', { socketId: socket.id });
+      } catch (e) {
+        // Logger error shouldn't break connection
+      }
       console.log(`[Socket.IO] New connection: ${socket.id}`);
       
       // Handle socket-level errors
       socket.on('error', (err) => {
-        logger.error('socket.error', {
-          socketId: socket.id,
-          message: err.message,
-          stack: err.stack
-        });
+        try {
+          logger.error('socket.error', {
+            socketId: socket.id,
+            message: err.message,
+            stack: err.stack
+          });
+        } catch (e) {
+          // Logger error shouldn't break error handling
+        }
         console.error(`[Socket.IO] Socket error for ${socket.id}:`, err.message);
         if (err.stack) {
           console.error(`[Socket.IO] Error stack:`, err.stack);
@@ -92,23 +111,35 @@ function initSocket(io) {
 
     // Load socket event handlers - wrap in try-catch to prevent connection failures
     try {
+      console.log(`[Socket.IO] Loading events for ${socket.id}...`);
       autoLoadSocketEvents(io, socket);
       console.log(`✅ Successfully loaded all socket events for ${socket.id}`);
     } catch (err) {
-      logger.error('socket.events.load.failed', {
-        socketId: socket.id,
-        message: err.message,
-        stack: err.stack
-      });
+      try {
+        logger.error('socket.events.load.failed', {
+          socketId: socket.id,
+          message: err.message,
+          stack: err.stack
+        });
+      } catch (e) {
+        // Logger error shouldn't break error handling
+      }
       console.error(`[Socket.IO] Failed to load events for ${socket.id}:`, err.message);
       console.error(`[Socket.IO] Error stack:`, err.stack);
       // Don't emit error to client - just log it and allow connection to continue
       // Some events may have loaded successfully
+      // Connection should still work even if some events fail to load
     }
+    
+    // Ensure connection is marked as successful even if some events failed
+    console.log(`[Socket.IO] Connection setup complete for ${socket.id}`);
 
       socket.on('disconnect', () => {
-        const logger = require('../utils/logger');
-        logger.info('socket.disconnected', { socketId: socket.id });
+        try {
+          logger.info('socket.disconnected', { socketId: socket.id });
+        } catch (e) {
+          // Logger error shouldn't break disconnect handler
+        }
         console.log(`[Socket.IO] Disconnected: ${socket.id}`);
       });
     } catch (err) {
