@@ -766,23 +766,45 @@
     <script src="./socketClient.browser.js"></script>
     <script>
         // Initialize Socket Client AFTER scripts are loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('[index.html] DOMContentLoaded - Checking SocketClient...');
-            if (window.SocketClient) {
-                console.log('[index.html] SocketClient found, initializing...');
-                window.SocketClient.init();
-            } else {
-                console.error('[index.html] SocketClient not found! Check if socketClient.browser.js loaded correctly.');
+        // Wait for both socket.io and SocketClient to be ready
+        function initializeSocketClient() {
+            console.log('[index.html] Attempting to initialize SocketClient...');
+            console.log('[index.html] Socket.io loaded:', typeof window.io !== 'undefined');
+            console.log('[index.html] SocketClient loaded:', typeof window.SocketClient !== 'undefined');
+            
+            // Check if both are ready
+            if (!window.io) {
+                console.warn('[index.html] Socket.io not ready yet, waiting...');
+                setTimeout(initializeSocketClient, 100);
+                return;
             }
-        });
+            
+            if (!window.SocketClient) {
+                console.error('[index.html] SocketClient not found! Check if socketClient.browser.js loaded correctly.');
+                return;
+            }
+            
+            // Check if already initialized
+            if (window.SocketClient.isConnected && window.SocketClient.isConnected()) {
+                console.log('[index.html] SocketClient already connected, skipping init');
+                return;
+            }
+            
+            console.log('[index.html] Both ready, initializing SocketClient...');
+            try {
+                window.SocketClient.init();
+            } catch (err) {
+                console.error('[index.html] Error during SocketClient.init():', err);
+            }
+        }
         
-        // // Also try immediate initialization if DOM is already loaded
-        // if (document.readyState === 'complete' || document.readyState === 'interactive') {
-        //     console.log('[index.html] DOM already loaded, initializing immediately...');
-        //     if (window.SocketClient) {
-        //         window.SocketClient.init();
-        //     }
-        // }
+        // Try initialization when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeSocketClient);
+        } else {
+            // DOM already loaded, initialize immediately
+            initializeSocketClient();
+        }
     </script>
 </body>
 

@@ -11,6 +11,7 @@ window.SocketClient = (function() {
 
   let socket = null;
   let isConnected = false;
+  let isInitializing = false; // Flag to prevent concurrent initialization
   const listeners = {};
   let dataLoadedCount = 0;
   const dataLoadedTarget = 4; // prizes, donations, draw:history, paymentOptions (core data)
@@ -88,10 +89,41 @@ window.SocketClient = (function() {
 
   // Initialize socket connection
   function init() {
-    if (!window.io) {
-      console.error('[SocketClient] Socket.io not loaded');
+    // Prevent multiple concurrent initializations
+    if (isInitializing) {
+      console.warn('[SocketClient] Initialization already in progress. Skipping duplicate init.');
       return false;
     }
+    
+    // Prevent multiple initializations if already connected/connecting
+    if (socket && (socket.connected || socket.connecting)) {
+      console.warn('[SocketClient] Already connected or connecting. Skipping init.');
+      return true;
+    }
+    
+    // Check if socket.io is loaded
+    if (!window.io) {
+      console.error('[SocketClient] Socket.io not loaded. Waiting...');
+      // Retry after a short delay if socket.io isn't ready
+      setTimeout(() => {
+        if (window.io) {
+          console.log('[SocketClient] Socket.io now available, retrying init...');
+          init();
+        } else {
+          console.error('[SocketClient] Socket.io still not loaded after delay');
+        }
+      }, 100);
+      return false;
+    }
+    
+    // Double-check socket.io is actually a function
+    if (typeof window.io !== 'function') {
+      console.error('[SocketClient] window.io is not a function:', typeof window.io);
+      return false;
+    }
+    
+    // Set initialization flag
+    isInitializing = true;
 
     const t = token.get();
     console.log('[SocketClient] Initializing with token:', t ? 'present' : 'absent');
@@ -119,16 +151,41 @@ window.SocketClient = (function() {
     console.log('[SocketClient] Socket.io library version:', window.io?.version || 'unknown');
     
     try {
+      // Disconnect existing socket if any (prevent duplicates)
+      if (socket) {
+        console.warn('[SocketClient] Existing socket found, disconnecting first...');
+        try {
+          socket.disconnect();
+          socket = null;
+        } catch (e) {
+          // Ignore disconnect errors
+        }
+      }
+      
       socket = window.io(SOCKET_URL, socketOptions);
       console.log('[SocketClient] Socket instance created:', socket ? 'success' : 'failed');
       console.log('[SocketClient] ⏳ Connection status: CONNECTING...');
+      
+      if (!socket) {
+        console.error('[SocketClient] Socket creation returned null/undefined');
+        return false;
+      }
     } catch (err) {
       console.error('[SocketClient] Failed to create socket:', err);
+      console.error('[SocketClient] Error details:', err.message, err.stack);
       console.log('[SocketClient] ❌ Connection status: FAILED TO INITIALIZE');
+      isInitializing = false; // Reset flag on error
       return false;
     }
 
     setupSocketListeners();
+    
+    // Reset initialization flag after setup
+    // Note: Connection might not be established yet, but setup is complete
+    setTimeout(() => {
+      isInitializing = false;
+    }, 1000);
+    
     return true;
   }
 
