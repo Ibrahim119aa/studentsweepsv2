@@ -373,7 +373,7 @@
     </div>
 
     <!-- Socket.IO Client Library -->
-    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js" crossorigin="anonymous"></script>
 
     <!-- 
       JavaScript Application Logic 
@@ -447,11 +447,13 @@
             if (socket) return;
 
             socket = io(SOCKET_URL, {
+                path: '/api/socket.io', // Socket.io path (matches server configuration)
                 reconnection: true,
                 reconnectionDelay: 1000,
                 reconnectionDelayMax: 5000,
                 reconnectionAttempts: Infinity,
                 auth: state.token ? { token: state.token } : {},
+                transports: ['polling', 'websocket'], // Enable both transports
             });
 
             // Connection events
