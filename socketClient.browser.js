@@ -93,6 +93,7 @@ window.SocketClient = (function() {
     console.log('[SocketClient] Initializing with token:', t ? 'present' : 'absent');
     console.log('[SocketClient] Connecting to:', SOCKET_URL);
     console.log('[SocketClient] Socket.io path:', '/api/socket.io');
+    console.log('[SocketClient] Full endpoint URL:', SOCKET_URL + '/api/socket.io');
 
     // If backend is served under /api, socket.io path should be /api/socket.io
     // If using reverse proxy, the path on server is /socket.io but accessible at /api/socket.io
@@ -103,12 +104,21 @@ window.SocketClient = (function() {
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
       reconnectionAttempts: 5,
-      transports: ['polling', 'websocket'] // Match server transports
+      transports: ['polling', 'websocket'], // Match server transports
+      forceNew: false, // Allow connection reuse
+      timeout: 20000 // 20 second timeout
     };
     
-    console.log('[SocketClient] Socket options:', socketOptions);
+    console.log('[SocketClient] Socket options:', JSON.stringify(socketOptions, null, 2));
+    console.log('[SocketClient] Socket.io library version:', window.io?.version || 'unknown');
     
-    socket = window.io(SOCKET_URL, socketOptions);
+    try {
+      socket = window.io(SOCKET_URL, socketOptions);
+      console.log('[SocketClient] Socket instance created:', socket ? 'success' : 'failed');
+    } catch (err) {
+      console.error('[SocketClient] Failed to create socket:', err);
+      return false;
+    }
 
     setupSocketListeners();
     return true;
@@ -205,10 +215,26 @@ window.SocketClient = (function() {
       message: error?.message || 'Unknown connection error',
       type: error?.type || 'unknown',
       description: error?.description || null,
-      context: error?.context || null
+      context: error?.context || null,
+      data: error?.data || null
     };
     
     console.error('[SocketClient] Connection error:', errorDetails);
+    console.error('[SocketClient] Full error object:', error);
+    console.error('[SocketClient] Connection URL:', SOCKET_URL);
+    console.error('[SocketClient] Socket path:', '/api/socket.io');
+    console.error('[SocketClient] Socket state:', {
+      connected: socket?.connected,
+      disconnected: socket?.disconnected,
+      id: socket?.id
+    });
+    
+    // Check if it's a specific error type
+    if (error?.message?.includes('Invalid namespace')) {
+      console.error('[SocketClient] ⚠️  Invalid namespace error - path mismatch detected!');
+      console.error('[SocketClient] Expected: https://studentsweeps.com/api/socket.io');
+      console.error('[SocketClient] Check server configuration matches client path');
+    }
     
     // Provide user-friendly error message
     if (window.showMessage) {
@@ -219,6 +245,8 @@ window.SocketClient = (function() {
         userMessage += 'Connection timed out. Please check your internet connection.';
       } else if (error?.message?.includes('refused')) {
         userMessage += 'Server is not available. Please try again later.';
+      } else if (error?.message?.includes('Invalid namespace')) {
+        userMessage += 'Connection path mismatch. Please contact support.';
       } else {
         userMessage += 'Please refresh the page or try again later.';
       }
