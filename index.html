@@ -766,15 +766,15 @@
     <script src="./socketClient.browser.js"></script>
     <script>
         // Initialize Socket Client AFTER scripts are loaded
-        // document.addEventListener('DOMContentLoaded', () => {
-        //     console.log('[index.html] DOMContentLoaded - Checking SocketClient...');
-        //     if (window.SocketClient) {
-        //         console.log('[index.html] SocketClient found, initializing...');
-        //         window.SocketClient.init();
-        //     } else {
-        //         console.error('[index.html] SocketClient not found! Check if socketClient.browser.js loaded correctly.');
-        //     }
-        // });
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('[index.html] DOMContentLoaded - Checking SocketClient...');
+            if (window.SocketClient) {
+                console.log('[index.html] SocketClient found, initializing...');
+                window.SocketClient.init();
+            } else {
+                console.error('[index.html] SocketClient not found! Check if socketClient.browser.js loaded correctly.');
+            }
+        });
         
         // // Also try immediate initialization if DOM is already loaded
         // if (document.readyState === 'complete' || document.readyState === 'interactive') {
