@@ -1,5 +1,6 @@
 window.SocketClient = (function() {
   // const SOCKET_URL = 'https://api.sweepstackz.com';
+  // Use base domain (not /api) - test-socket.html connects with https://studentsweeps.com
   const SOCKET_URL = 'https://studentsweeps.com';
 
   const TOKEN_KEY = 'sweepstackz_token';
@@ -94,11 +95,13 @@ window.SocketClient = (function() {
     console.log('[SocketClient] Connecting to:', SOCKET_URL);
     console.log('[SocketClient] Socket.io path:', '/api/socket.io');
     console.log('[SocketClient] Full endpoint URL:', SOCKET_URL + '/api/socket.io');
+    console.log('[SocketClient] Configuration: Base domain with /api/socket.io path (matches working test-socket.html)');
 
-    // If backend is served under /api, socket.io path should be /api/socket.io
-    // If using reverse proxy, the path on server is /socket.io but accessible at /api/socket.io
+    // Working configuration (matches test-socket.html when using base domain):
+    // URL: https://studentsweeps.com (base domain, NOT /api)
+    // Path: /api/socket.io
     const socketOptions = {
-      path: '/api/socket.io', // Client-side path: /api/socket.io (matches server accessible path)
+      path: '/api/socket.io', // Path to socket.io endpoint
       auth: t ? { token: t } : {},
       reconnection: true,
       reconnectionDelay: 1000,
