@@ -118,8 +118,10 @@ window.SocketClient = (function() {
     try {
       socket = window.io(SOCKET_URL, socketOptions);
       console.log('[SocketClient] Socket instance created:', socket ? 'success' : 'failed');
+      console.log('[SocketClient] ⏳ Connection status: CONNECTING...');
     } catch (err) {
       console.error('[SocketClient] Failed to create socket:', err);
+      console.log('[SocketClient] ❌ Connection status: FAILED TO INITIALIZE');
       return false;
     }
 
@@ -179,7 +181,13 @@ window.SocketClient = (function() {
   // Socket lifecycle handlers
   function onConnect() {
     isConnected = true;
-    console.log('[SocketClient] Connected successfully to', SOCKET_URL);
+    console.log('✅ [SocketClient] ========================================');
+    console.log('✅ [SocketClient] CONNECTED SUCCESSFULLY!');
+    console.log('✅ [SocketClient] URL:', SOCKET_URL);
+    console.log('✅ [SocketClient] Socket ID:', socket.id);
+    console.log('✅ [SocketClient] Transport:', socket.io.engine.transport.name);
+    console.log('✅ [SocketClient] Connection status: CONNECTED ✓');
+    console.log('✅ [SocketClient] ========================================');
     
     // Process any pending emits from before connection
     processPendingEmits();
@@ -209,7 +217,10 @@ window.SocketClient = (function() {
 
   function onDisconnect() {
     isConnected = false;
-    console.log('[SocketClient] Disconnected');
+    console.log('⚠️  [SocketClient] ========================================');
+    console.log('⚠️  [SocketClient] DISCONNECTED');
+    console.log('⚠️  [SocketClient] Connection status: DISCONNECTED ✗');
+    console.log('⚠️  [SocketClient] ========================================');
   }
 
   function onConnectError(error) {
@@ -222,15 +233,19 @@ window.SocketClient = (function() {
       data: error?.data || null
     };
     
-    console.error('[SocketClient] Connection error:', errorDetails);
-    console.error('[SocketClient] Full error object:', error);
-    console.error('[SocketClient] Connection URL:', SOCKET_URL);
-    console.error('[SocketClient] Socket path:', '/api/socket.io');
-    console.error('[SocketClient] Socket state:', {
-      connected: socket?.connected,
-      disconnected: socket?.disconnected,
-      id: socket?.id
+    console.error('❌ [SocketClient] ========================================');
+    console.error('❌ [SocketClient] CONNECTION ERROR!');
+    console.error('❌ [SocketClient] Connection status: FAILED ✗');
+    console.error('❌ [SocketClient] Error details:', errorDetails);
+    console.error('❌ [SocketClient] Full error object:', error);
+    console.error('❌ [SocketClient] Connection URL:', SOCKET_URL);
+    console.error('❌ [SocketClient] Socket path:', '/api/socket.io');
+    console.error('❌ [SocketClient] Socket state:', {
+      connected: socket?.connected || false,
+      disconnected: socket?.disconnected || false,
+      id: socket?.id || 'none'
     });
+    console.error('❌ [SocketClient] ========================================');
     
     // Check if it's a specific error type
     if (error?.message?.includes('Invalid namespace')) {
@@ -748,6 +763,21 @@ window.SocketClient = (function() {
     if (window.changePage) window.changePage(page, tab);
   }
 
+  // Connection status checker (for debugging)
+  function getConnectionStatus() {
+    const status = {
+      isConnected: isConnected,
+      socketExists: socket !== null,
+      socketConnected: socket?.connected || false,
+      socketId: socket?.id || null,
+      transport: socket?.io?.engine?.transport?.name || null,
+      url: SOCKET_URL,
+      path: '/api/socket.io'
+    };
+    console.log('📊 [SocketClient] Connection Status:', status);
+    return status;
+  }
+
   // Public API
   return {
     init,
@@ -761,6 +791,7 @@ window.SocketClient = (function() {
     clearUser: user.clear,
     normUser,
     isConnected: () => isConnected,
+    getConnectionStatus, // New: Get detailed connection status
     requestInitialData,
     requestMyTransactions,
     changePage,
