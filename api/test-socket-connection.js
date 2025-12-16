@@ -54,11 +54,20 @@ socket.on('connect', () => {
   console.log('');
   
   // Test emitting a simple event
-  console.log('📤 Testing emit: auth:status');
-  socket.emit('auth:status', { token: null }, (response) => {
+  console.log('📤 Testing emit: auth:status (without token)');
+  // Send empty object - server will return { success: true, valid: false }
+  socket.emit('auth:status', {}, (response) => {
     if (response) {
-      console.log('✅ Response received:', response);
+      console.log('✅ Response received:', JSON.stringify(response, null, 2));
+      if (response.success && !response.valid) {
+        console.log('   ✓ Expected response: No token provided, auth status invalid');
+      }
     }
+  });
+  
+  // Also test with a listener for the response event
+  socket.on('auth:status:response', (response) => {
+    console.log('✅ Received auth:status:response event:', JSON.stringify(response, null, 2));
   });
   
   // Disconnect after 2 seconds
