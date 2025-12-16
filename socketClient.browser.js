@@ -190,7 +190,30 @@ window.SocketClient = (function() {
   }
 
   function onConnectError(error) {
-    console.error('[SocketClient] Connection error:', error);
+    // Log detailed error information
+    const errorDetails = {
+      message: error?.message || 'Unknown connection error',
+      type: error?.type || 'unknown',
+      description: error?.description || null,
+      context: error?.context || null
+    };
+    
+    console.error('[SocketClient] Connection error:', errorDetails);
+    
+    // Provide user-friendly error message
+    if (window.showMessage) {
+      let userMessage = 'Unable to connect to server. ';
+      if (error?.message === 'server error') {
+        userMessage += 'The server is experiencing issues. Please try again in a moment.';
+      } else if (error?.message?.includes('timeout')) {
+        userMessage += 'Connection timed out. Please check your internet connection.';
+      } else if (error?.message?.includes('refused')) {
+        userMessage += 'Server is not available. Please try again later.';
+      } else {
+        userMessage += 'Please refresh the page or try again later.';
+      }
+      window.showMessage(userMessage, 'error');
+    }
   }
 
   function onError(error) {

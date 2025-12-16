@@ -9,7 +9,31 @@ const { initSocket } = require('./loaders/socket');
 const PORT = process.env.PORT || 4000;
 
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: '*' } });
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST'],
+    credentials: true
+  },
+  transports: ['polling', 'websocket'],
+  allowEIO3: true, // Allow Engine.IO v3 clients for backward compatibility
+  pingTimeout: 60000,
+  pingInterval: 25000
+});
+
+// Handle connection-level errors (before socket is created)
+io.on('connection_error', (err) => {
+  const logger = require('./utils/logger');
+  logger.error('socket.connection_error', {
+    message: err.message,
+    req: err.req ? {
+      headers: err.req.headers,
+      url: err.req.url
+    } : null,
+    context: err.context || null
+  });
+  console.error('[Socket.IO] Connection error:', err.message);
+});
 
 (async () => {
   await connectDB();

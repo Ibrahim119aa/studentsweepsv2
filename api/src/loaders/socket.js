@@ -4,6 +4,17 @@ function initSocket(io) {
   io.on('connection', (socket) => {
     const logger = require('../utils/logger');
     logger.info('socket.connection', { socketId: socket.id });
+    
+    // Handle socket-level errors
+    socket.on('error', (err) => {
+      logger.error('socket.error', {
+        socketId: socket.id,
+        message: err.message,
+        stack: err.stack
+      });
+      console.error(`[Socket.IO] Socket error for ${socket.id}:`, err.message);
+    });
+    
     // Instrument socket and io to log incoming events and outgoing emits.
     try {
       // wrap socket.on to log incoming events and payloads
@@ -72,7 +83,19 @@ function initSocket(io) {
       try { logger.warn('socket.instrumentation.failed', { socketId: socket.id, message: e.message }); } catch (e) {}
     }
 
-    autoLoadSocketEvents(io, socket);
+    // Load socket event handlers - wrap in try-catch to prevent connection failures
+    try {
+      autoLoadSocketEvents(io, socket);
+    } catch (err) {
+      logger.error('socket.events.load.failed', {
+        socketId: socket.id,
+        message: err.message,
+        stack: err.stack
+      });
+      console.error(`[Socket.IO] Failed to load events for ${socket.id}:`, err.message);
+      // Still allow connection, but socket won't have event handlers
+      socket.emit('error', { message: 'Failed to initialize socket handlers' });
+    }
 
     socket.on('disconnect', () => {
       const logger = require('../utils/logger');
