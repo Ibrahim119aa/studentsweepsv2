@@ -240,45 +240,45 @@ window.SocketClient = (function() {
       context: error?.context || null,
       data: error?.data || null
     };
-    console.error(error);
     
-    console.error('❌ [SocketClient] ========================================');
-    console.error('❌ [SocketClient] CONNECTION ERROR!');
-    console.error('❌ [SocketClient] Connection status: FAILED ✗');
-    console.error('❌ [SocketClient] Error details:', errorDetails);
-    console.error('❌ [SocketClient] Full error object:', error);
-    console.error('❌ [SocketClient] Connection URL:', SOCKET_URL);
-    console.error('❌ [SocketClient] Socket path:', '/api/socket.io');
-    console.error('❌ [SocketClient] Socket state:', {
-      connected: socket?.connected || false,
-      disconnected: socket?.disconnected || false,
-      id: socket?.id || 'none'
-    });
-    console.error('❌ [SocketClient] ========================================');
     
-    // Check if it's a specific error type
-    if (error?.message?.includes('Invalid namespace')) {
-      console.error('[SocketClient] ⚠️  Invalid namespace error - path mismatch detected!');
-      console.error('[SocketClient] Expected: https://studentsweeps.com/api/socket.io');
-      console.error('[SocketClient] Check server configuration matches client path');
-    }
+    // console.error('❌ [SocketClient] ========================================');
+    // console.error('❌ [SocketClient] CONNECTION ERROR!');
+    // console.error('❌ [SocketClient] Connection status: FAILED ✗');
+    // console.error('❌ [SocketClient] Error details:', errorDetails);
+    // console.error('❌ [SocketClient] Full error object:', error);
+    // console.error('❌ [SocketClient] Connection URL:', SOCKET_URL);
+    // console.error('❌ [SocketClient] Socket path:', '/api/socket.io');
+    // console.error('❌ [SocketClient] Socket state:', {
+    //   connected: socket?.connected || false,
+    //   disconnected: socket?.disconnected || false,
+    //   id: socket?.id || 'none'
+    // });
+    // console.error('❌ [SocketClient] ========================================');
     
-    // Provide user-friendly error message
-    if (window.showMessage) {
-      console.error()
-      let userMessage = 'Unable to connect to server. ';
-      if (error?.message === 'server error') {
-        userMessage += 'The server is experiencing issues. Please try again in a moment.';
-      } else if (error?.message?.includes('timeout')) {
-        userMessage += 'Connection timed out. Please check your internet connection.';
-      } else if (error?.message?.includes('refused')) {
-        userMessage += 'Server is not available. Please try again later.';
-      } else if (error?.message?.includes('Invalid namespace')) {
-        userMessage += 'Connection path mismatch. Please contact support.';
-      } else {
-        userMessage += 'Please refresh the page or try again later.';
-      }
-      window.showMessage(userMessage, 'error');
+    // // Check if it's a specific error type
+    // if (error?.message?.includes('Invalid namespace')) {
+    //   console.error('[SocketClient] ⚠️  Invalid namespace error - path mismatch detected!');
+    //   console.error('[SocketClient] Expected: https://studentsweeps.com/api/socket.io');
+    //   console.error('[SocketClient] Check server configuration matches client path');
+    // }
+    
+    // // Provide user-friendly error message
+    // if (window.showMessage) {
+    //   console.error()
+    //   let userMessage = 'Unable to connect to server. ';
+    //   if (error?.message === 'server error') {
+    //     userMessage += 'The server is experiencing issues. Please try again in a moment.';
+    //   } else if (error?.message?.includes('timeout')) {
+    //     userMessage += 'Connection timed out. Please check your internet connection.';
+    //   } else if (error?.message?.includes('refused')) {
+    //     userMessage += 'Server is not available. Please try again later.';
+    //   } else if (error?.message?.includes('Invalid namespace')) {
+    //     userMessage += 'Connection path mismatch. Please contact support.';
+    //   } else {
+    //     userMessage += 'Please refresh the page or try again later.';
+    //   }
+    //   window.showMessage(userMessage, 'error');
     }
   }
 
