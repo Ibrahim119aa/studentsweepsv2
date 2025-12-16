@@ -1,6 +1,6 @@
 window.SocketClient = (function() {
   // const SOCKET_URL = 'https://api.sweepstackz.com';
-  const SOCKET_URL = 'https://studentsweeps.com/api';
+  const SOCKET_URL = 'https://studentsweeps.com/api/socket.io';
 
   const TOKEN_KEY = 'sweepstackz_token';
   const USER_KEY = 'sweepstackz_user';
