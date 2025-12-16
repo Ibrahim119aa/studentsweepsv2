@@ -364,7 +364,7 @@
         }
 
         /* Ensure content is above background */
-        #main-content > * {
+        #main-content>* {
             position: relative;
             z-index: 1;
         }
@@ -416,6 +416,7 @@
 
             <!-- Desktop Navigation -->
             <nav class="hidden md:flex flex-grow justify-center space-x-6 lg:space-x-10 header-nav">
+
                 <a href="#" class="nav-link text-gray-600 hover:text-accent py-1 transition duration-150"
                     data-page="prizes" onclick="changePage('prizes', null, event)">All Prizes</a>
                 <a href="#" class="nav-link text-gray-600 hover:text-accent py-1 transition duration-150"
@@ -445,6 +446,8 @@
             <i data-lucide="x" class="w-6 h-6"></i>
         </button>
         <h2 class="text-xl font-bold mb-6">Menu</h2>
+        <a href="#" class="block py-2 text-gray-700 hover:text-accent mobile-nav-link" data-page="prizes"
+            onclick="handleMobileNavClick('home', null, event)">Home</a>
         <a href="#" class="block py-2 text-gray-700 hover:text-accent mobile-nav-link" data-page="prizes"
             onclick="handleMobileNavClick('prizes', null, event)">All Prizes</a>
         <a href="#" class="block py-2 text-gray-700 hover:text-accent mobile-nav-link" data-page="donations"
