@@ -379,7 +379,7 @@
       JavaScript Application Logic 
     -->
     <script type="module">
-        const SOCKET_URL = 'https://studentsweeps.com/api';
+        const SOCKET_URL = 'https://studentsweeps.com'; // Base domain (path will be /api/socket.io)
         // const SOCKET_URL = 'https://api.sweepstackz.com';
         let socket = null;
 
@@ -444,7 +444,16 @@
 
         // --- Socket.IO Connection & Event Handlers ---
         function initializeSocket() {
-            if (socket) return;
+            if (socket) {
+                console.log('[SOCKET] Socket already exists, skipping initialization');
+                return;
+            }
+
+            console.log('[SOCKET] Initializing socket connection...');
+            console.log('[SOCKET] URL:', SOCKET_URL);
+            console.log('[SOCKET] Path:', '/api/socket.io');
+            console.log('[SOCKET] Full endpoint:', SOCKET_URL + '/api/socket.io');
+            console.log('[SOCKET] Has token:', !!state.token);
 
             socket = io(SOCKET_URL, {
                 path: '/api/socket.io', // Socket.io path (matches server configuration)
@@ -454,11 +463,12 @@
                 reconnectionAttempts: Infinity,
                 auth: state.token ? { token: state.token } : {},
                 transports: ['polling', 'websocket'], // Enable both transports
+                timeout: 10000, // Connection timeout
             });
 
             // Connection events
             socket.on('connect', () => {
-                console.log('[SOCKET] Connected successfully, ID:', socket.id);
+                console.log('[SOCKET] ✅ Connected successfully, ID:', socket.id);
                 setState({ socketConnected: true });
                 // If we have a token, we're authenticated (backend validates via middleware)
                 if (state.token) {
@@ -472,8 +482,44 @@
                 }
             });
 
-            socket.on('disconnect', () => {
-                console.log('[SOCKET] Disconnected');
+            socket.on('disconnect', (reason) => {
+                console.log('[SOCKET] ❌ Disconnected. Reason:', reason);
+                setState({ socketConnected: false });
+            });
+
+            socket.on('connect_error', (error) => {
+                console.error('[SOCKET] ❌ Connection error:', error);
+                console.error('[SOCKET] Error type:', error.type);
+                console.error('[SOCKET] Error message:', error.message);
+                if (error.description) {
+                    console.error('[SOCKET] Error description:', error.description);
+                }
+                if (error.context) {
+                    console.error('[SOCKET] Error context:', error.context);
+                }
+                setState({ socketConnected: false });
+                
+                // Show error in login modal if it exists
+                if (authErrorMsgEl) {
+                    authErrorMsgEl.textContent = `Connection error: ${error.message || 'Unable to connect to server'}`;
+                }
+            });
+
+            socket.on('reconnect', (attemptNumber) => {
+                console.log('[SOCKET] 🔄 Reconnected after', attemptNumber, 'attempts');
+                setState({ socketConnected: true });
+            });
+
+            socket.on('reconnect_attempt', (attemptNumber) => {
+                console.log('[SOCKET] 🔄 Reconnection attempt', attemptNumber);
+            });
+
+            socket.on('reconnect_error', (error) => {
+                console.error('[SOCKET] ❌ Reconnection error:', error);
+            });
+
+            socket.on('reconnect_failed', () => {
+                console.error('[SOCKET] ❌ Reconnection failed after all attempts');
                 setState({ socketConnected: false });
             });
 
@@ -481,13 +527,17 @@
                 // Handle both string errors and object errors
                 if (typeof error === 'string') {
                     console.error('[SOCKET] Error:', error);
-                    authErrorMsgEl.textContent = `Connection error: ${error}`;
+                    if (authErrorMsgEl) {
+                        authErrorMsgEl.textContent = `Connection error: ${error}`;
+                    }
                 } else if (error && error.message) {
                     console.error('[SOCKET] Error received:', error.message);
                     if (error.details) {
                         console.error('[SOCKET] Error details:', error.details);
                     }
-                    alert(`Error: ${error.message}`);
+                    if (authErrorMsgEl) {
+                        authErrorMsgEl.textContent = `Error: ${error.message}`;
+                    }
                 } else {
                     console.error('[SOCKET] Error:', error);
                 }
@@ -2828,9 +2878,19 @@
                 setState({ token: savedToken });
             }
 
+            // Wait for socket.io to be loaded before initializing
+            function initSocketWhenReady() {
+                if (typeof io === 'undefined') {
+                    console.warn('[APP] Socket.io not loaded yet, waiting...');
+                    setTimeout(initSocketWhenReady, 100);
+                    return;
+                }
+                console.log('[APP] Socket.io loaded, initializing connection to:', SOCKET_URL);
+                initializeSocket();
+            }
+
             // Initialize socket
-            console.log('[APP] Initializing socket connection to:', SOCKET_URL);
-            initializeSocket();
+            initSocketWhenReady();
 
             // Show login modal if no token
             if (!savedToken) {
