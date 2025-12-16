@@ -19,7 +19,7 @@ const { io } = require('socket.io-client');
 
 class SocketClient {
   constructor(url, opts = {}) {
-    this.url = url || (typeof window !== 'undefined' ? window.location.origin : 'https://www.studentsweeps.com/api');
+    this.url = url || (typeof window !== 'undefined' ? window.location.origin : 'https://www.studentsweeps.com');
     this.opts = opts;
     this.socket = null;
     this.token = null;
