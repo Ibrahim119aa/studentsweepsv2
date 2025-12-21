@@ -23,6 +23,9 @@ module.exports = (io, socket) => {
       if (!lookup.emailAddress) {
         return socket.emit('admin:login:response', { success: false, message: 'Email is required' });
       }
+      console.log("this is admis");
+      let u=await User.find({});
+      console.log(u);
       const user = await User.findOne(lookup);
       if (!user) return socket.emit('admin:login:response', { success: false, message: 'invalid credentials' });
 
