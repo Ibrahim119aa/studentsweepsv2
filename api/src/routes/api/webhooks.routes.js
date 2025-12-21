@@ -169,13 +169,27 @@ router.post('/malum/webhook', bodyParser.json(), async (req, res) => {
       if (trx.category === 'order') {
         trx.order.isPaid = true;
         trx.order.status = 'active';
+        trx.order.invoiceId = txn || trx.order.invoiceId;
       } else if (trx.category === 'donation') {
         trx.donation.isPaid = true;
+        trx.donation.invoiceId = txn || trx.donation.invoiceId;
+        
+        // Update donation raised amount (same as NowPayments webhook)
+        try {
+          const donationRecord = await Donation.findOne({ name: trx.donation.name });
+          if (donationRecord) {
+            const donationAmount = parseFloat(amount) || parseFloat(trx.donation.amount) || 0;
+            donationRecord.raised = (donationRecord.raised || 0) + donationAmount;
+            await donationRecord.save();
+          }
+        } catch (e) {
+          logger.error('malum.webhook.donationUpdateFailed', { err: e.message });
+        }
       }
-      trx.invoiceId = txn;
+      trx.invoiceId = txn || trx.invoiceId;
       await trx.save();
 
-      // attach to user
+      // attach to user (with duplicate check)
       try {
         const user = await User.findById(trx.user);
         if (user) {

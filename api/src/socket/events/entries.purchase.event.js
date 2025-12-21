@@ -29,6 +29,9 @@ module.exports = (io, socket) => {
 
       const trxID = generateTrxID();
       const costPerEntry = amount ? (totalCost / amount) : 0;
+      
+      // Get payment provider from payload or default to 'malum'
+      const paymentProvider = payload.paymentProvider || 'malum';
 
       const trx = await Transaction.create({
         trxID,
@@ -40,6 +43,7 @@ module.exports = (io, socket) => {
           status: 'pendingPayment',
           isWinner: false,
           isPaid: false,
+          paymentProvider, // Store payment provider in order
           entries: {
             amount,
             costPerEntry,
@@ -50,8 +54,23 @@ module.exports = (io, socket) => {
         }
       });
 
+      // Attach transaction to user immediately (same as donation.purchase)
+      const User = require('../../models/User');
+      try {
+        const userDoc = await User.findById(user.id);
+        if (userDoc) {
+          userDoc.transactions = userDoc.transactions || [];
+          if (!userDoc.transactions.includes(trx._id)) {
+            userDoc.transactions.push(trx._id);
+            await userDoc.save();
+          }
+        }
+      } catch (e) {
+        const logger = require('../../utils/logger');
+        logger.warn('entries.purchase.userAttachFailed', { err: e.message, trxID: trx.trxID });
+      }
+
       const { createNowPaymentsInvoice, createMalumCheckoutForm } = require('../../services/invoiceIntegration');
-      const paymentProvider = payload.paymentProvider || 'malum';
       const base = process.env.APP_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
 
       if (paymentProvider === 'nowpayments') {

@@ -1914,7 +1914,7 @@
             if (!container) return;
 
             // Get enabled payment options from PAYMENT_OPTIONS
-            const enabledProviders = (window.PAYMENT_OPTIONS || []).filter(p => p.enabled === true);
+            let enabledProviders = (window.PAYMENT_OPTIONS || []).filter(p => p.enabled === true);
 
             // Build provider info map
             const providerInfo = {
@@ -1928,17 +1928,24 @@
                 return;
             }
 
+            // Sort providers: prefer 'malum' first if both are enabled (more common payment method)
+            enabledProviders.sort((a, b) => {
+                if (a.providerName === 'malum') return -1;
+                if (b.providerName === 'malum') return 1;
+                return 0;
+            });
+
             // Render each enabled provider as a radio button
             container.innerHTML = enabledProviders.map((provider, idx) => {
                 const info = providerInfo[provider.providerName] || {};
-                const isFirst = idx === 0;
+                const isFirst = idx === 0; // First one is selected by default
                 const symbolOrIcon = info.icon
                     ? `<i data-lucide="${info.icon}" class="w-5 h-5"></i>`
                     : `<span class="font-extrabold text-lg">${info.symbol}</span>`;
 
                 return `
                     <label class="payment-provider-label relative flex items-center p-4 border-2 border-gray-300 rounded-xl cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 ${isFirst ? 'provider-selected' : ''}">
-                        <input type="radio" name="checkout-provider" value="${provider.providerName}" class="sr-only provider-radio" ${isFirst ? 'checked' : ''}>
+                        <input type="radio" name="checkout-provider" value="${provider.providerName}" class="sr-only provider-radio" ${isFirst ? 'checked' : ''} required>
                         <div class="flex-grow flex justify-between items-center">
                             <div class="flex items-center gap-3">
                                 <div class="provider-indicator flex items-center justify-center w-6 h-6 rounded-full border-2 border-gray-300 transition-all duration-200">
