@@ -60,7 +60,7 @@ async function createNowPaymentsInvoice({
   };
 
   const headers = {
-    'x-api-key': nowpaymentsSandboxKey, // SANDBOX KEY
+    'x-api-key': nowpaymentsKey, // SANDBOX KEY
     'Content-Type': 'application/json'
   };
 
