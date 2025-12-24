@@ -9,11 +9,49 @@ const malumBusinessId = process.env.MALUM_BUSINESS_ID;
 const malumPrivateKey = process.env.MALUM_PRIVATE_KEY;
 const MALUM_WEBHOOK_KEY = process.env.MALUM_WEBHOOK_KEY;
 
-async function createNowPaymentsInvoice({ priceAmount, priceCurrency = 'USD', payCurrency = null, orderId, orderDescription = '', ipnCallbackUrl, successUrl, cancelUrl }) {
-  const endpoint = 'https://api.nowpayments.io/v1/invoice';
+// async function createNowPaymentsInvoice({ priceAmount, priceCurrency = 'USD', payCurrency = null, orderId, orderDescription = '', ipnCallbackUrl, successUrl, cancelUrl }) {
+//   const endpoint = 'https://api.nowpayments.io/v1/invoice';
+//   const payload = {
+//     price_amount: priceAmount,
+//     price_currency: priceCurrency,
+//     order_id: orderId,
+//     order_description: orderDescription,
+//     ipn_callback_url: ipnCallbackUrl,
+//     success_url: successUrl,
+//     cancel_url: cancelUrl
+//   };
+
+//   const headers = {
+//     'x-api-key': nowpaymentsKey,
+//     'Content-Type': 'application/json'
+//   };
+
+//   try {
+//     logger.info('createNowPaymentsInvoice.request', { endpoint, payload: Object.assign({}, payload, { orderDescription: payload.orderDescription }) });
+//     const resp = await axios.post(endpoint, payload, { headers });
+//     logger.info('createNowPaymentsInvoice.response', { id: resp && resp.data && (resp.data.id || resp.data.invoice_id) });
+//     return resp.data;
+//   } catch (err) {
+//     logger.error('createNowPaymentsInvoice.error', { message: err.message, payload });
+//     throw err;
+//   }
+// }
+async function createNowPaymentsInvoice({
+  priceAmount,
+  priceCurrency = 'USD',
+  payCurrency = 'usdttrc20',
+  orderId,
+  orderDescription = '',
+  ipnCallbackUrl,
+  successUrl,
+  cancelUrl
+}) {
+  const endpoint = 'https://api-sandbox.nowpayments.io/v1/invoice';
+
   const payload = {
     price_amount: priceAmount,
     price_currency: priceCurrency,
+    pay_currency: payCurrency,
     order_id: orderId,
     order_description: orderDescription,
     ipn_callback_url: ipnCallbackUrl,
@@ -22,24 +60,22 @@ async function createNowPaymentsInvoice({ priceAmount, priceCurrency = 'USD', pa
   };
 
   const headers = {
-    'x-api-key': nowpaymentsKey,
+    'x-api-key': nowpaymentsSandboxKey, // SANDBOX KEY
     'Content-Type': 'application/json'
   };
 
   try {
-    logger.info('createNowPaymentsInvoice.request', { endpoint, payload: Object.assign({}, payload, { orderDescription: payload.orderDescription }) });
     const resp = await axios.post(endpoint, payload, { headers });
-    logger.info('createNowPaymentsInvoice.response', { id: resp && resp.data && (resp.data.id || resp.data.invoice_id) });
-    return resp.data;
+    return resp.data; // invoice_url is here
   } catch (err) {
-    logger.error('createNowPaymentsInvoice.error', { message: err.message, payload });
-    throw err;
+    throw err.response?.data || err;
   }
 }
 
+
 async function createMalumCheckoutForm({ amount, currency = 'USD', webhookUrl, successUrl, cancelUrl, customerEmail = '', metadata = '', buyerPaysFees = 0 }) {
   const endpoint = 'https://malum.co/api/v2/payment/create';
-  
+
   const headers = {
     'MALUM': `${malumBusinessId}:${malumPrivateKey}`,
     'Content-Type': 'application/json'
@@ -61,16 +97,16 @@ async function createMalumCheckoutForm({ amount, currency = 'USD', webhookUrl, s
   try {
     logger.info('createMalumCheckoutForm.request', { endpoint, amount, currency, customerEmail });
     const resp = await axios.post(endpoint, payload, { headers });
-    
+
     // Malum returns JSON with direct checkout link
     const responseData = resp.data;
-    logger.info('createMalumCheckoutForm.response', { 
-      status: responseData?.status, 
-      transaction_id: responseData?.transaction_id, 
+    logger.info('createMalumCheckoutForm.response', {
+      status: responseData?.status,
+      transaction_id: responseData?.transaction_id,
       link: responseData?.link,
       fullResponse: JSON.stringify(responseData).substring(0, 500)
     });
-    
+
     if (responseData?.status === 'success' && responseData?.link) {
       return {
         status: 'success',
@@ -79,10 +115,10 @@ async function createMalumCheckoutForm({ amount, currency = 'USD', webhookUrl, s
         transaction_id: responseData.transaction_id
       };
     }
-    
+
     // If response doesn't have expected structure, log warning but still try to extract URL
     logger.warn('createMalumCheckoutForm.unexpectedResponse', { responseData });
-    
+
     // Try to extract URL from various possible fields
     const url = responseData?.link || responseData?.url || responseData?.checkout_url || responseData?.payment_url;
     if (url) {
@@ -93,7 +129,7 @@ async function createMalumCheckoutForm({ amount, currency = 'USD', webhookUrl, s
         transaction_id: responseData.transaction_id || responseData.txn || responseData.id
       };
     }
-    
+
     // If no URL found, throw error
     throw new Error(`Malum payment creation failed: ${JSON.stringify(responseData)}`);
   } catch (err) {

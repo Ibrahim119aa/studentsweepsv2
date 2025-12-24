@@ -34,6 +34,7 @@ router.post('/nowpayments/ipn', bodyParser.json(), async (req, res) => {
       return res.status(500).send('Server Configuration Error');
     }
 
+    console.log("this is now payment");
     const hmac = crypto.createHmac('sha512', ipnSecret);
     hmac.update(sortedString);
     const calculatedSignature = hmac.digest('hex');
