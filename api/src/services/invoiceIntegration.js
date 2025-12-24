@@ -9,49 +9,11 @@ const malumBusinessId = process.env.MALUM_BUSINESS_ID;
 const malumPrivateKey = process.env.MALUM_PRIVATE_KEY;
 const MALUM_WEBHOOK_KEY = process.env.MALUM_WEBHOOK_KEY;
 
-// async function createNowPaymentsInvoice({ priceAmount, priceCurrency = 'USD', payCurrency = null, orderId, orderDescription = '', ipnCallbackUrl, successUrl, cancelUrl }) {
-//   const endpoint = 'https://api.nowpayments.io/v1/invoice';
-//   const payload = {
-//     price_amount: priceAmount,
-//     price_currency: priceCurrency,
-//     order_id: orderId,
-//     order_description: orderDescription,
-//     ipn_callback_url: ipnCallbackUrl,
-//     success_url: successUrl,
-//     cancel_url: cancelUrl
-//   };
-
-//   const headers = {
-//     'x-api-key': nowpaymentsKey,
-//     'Content-Type': 'application/json'
-//   };
-
-//   try {
-//     logger.info('createNowPaymentsInvoice.request', { endpoint, payload: Object.assign({}, payload, { orderDescription: payload.orderDescription }) });
-//     const resp = await axios.post(endpoint, payload, { headers });
-//     logger.info('createNowPaymentsInvoice.response', { id: resp && resp.data && (resp.data.id || resp.data.invoice_id) });
-//     return resp.data;
-//   } catch (err) {
-//     logger.error('createNowPaymentsInvoice.error', { message: err.message, payload });
-//     throw err;
-//   }
-// }
-async function createNowPaymentsInvoice({
-  priceAmount,
-  priceCurrency = 'USD',
-  payCurrency = 'usdttrc20',
-  orderId,
-  orderDescription = '',
-  ipnCallbackUrl,
-  successUrl,
-  cancelUrl
-}) {
-  const endpoint = 'https://api-sandbox.nowpayments.io/v1/invoice';
-
+async function createNowPaymentsInvoice({ priceAmount, priceCurrency = 'USD', payCurrency = null, orderId, orderDescription = '', ipnCallbackUrl, successUrl, cancelUrl }) {
+  const endpoint = 'https://api.nowpayments.io/v1/invoice';
   const payload = {
     price_amount: priceAmount,
     price_currency: priceCurrency,
-    pay_currency: payCurrency,
     order_id: orderId,
     order_description: orderDescription,
     ipn_callback_url: ipnCallbackUrl,
@@ -60,17 +22,55 @@ async function createNowPaymentsInvoice({
   };
 
   const headers = {
-    'x-api-key': nowpaymentsKey, // SANDBOX KEY
+    'x-api-key': nowpaymentsKey,
     'Content-Type': 'application/json'
   };
 
   try {
+    logger.info('createNowPaymentsInvoice.request', { endpoint, payload: Object.assign({}, payload, { orderDescription: payload.orderDescription }) });
     const resp = await axios.post(endpoint, payload, { headers });
-    return resp.data; // invoice_url is here
+    logger.info('createNowPaymentsInvoice.response', { id: resp && resp.data && (resp.data.id || resp.data.invoice_id) });
+    return resp.data;
   } catch (err) {
-    throw err.response?.data || err;
+    logger.error('createNowPaymentsInvoice.error', { message: err.message, payload });
+    throw err;
   }
 }
+// async function createNowPaymentsInvoice({
+//   priceAmount,
+//   priceCurrency = 'USD',
+//   payCurrency = 'usdttrc20',
+//   orderId,
+//   orderDescription = '',
+//   ipnCallbackUrl,
+//   successUrl,
+//   cancelUrl
+// }) {
+//   const endpoint = 'https://api-sandbox.nowpayments.io/v1/invoice';
+
+//   const payload = {
+//     price_amount: priceAmount,
+//     price_currency: priceCurrency,
+//     pay_currency: payCurrency,
+//     order_id: orderId,
+//     order_description: orderDescription,
+//     ipn_callback_url: ipnCallbackUrl,
+//     success_url: successUrl,
+//     cancel_url: cancelUrl
+//   };
+
+//   const headers = {
+//     'x-api-key': nowpaymentsKey, // SANDBOX KEY
+//     'Content-Type': 'application/json'
+//   };
+
+//   try {
+//     const resp = await axios.post(endpoint, payload, { headers });
+//     return resp.data; // invoice_url is here
+//   } catch (err) {
+//     throw err.response?.data || err;
+//   }
+// }
 
 
 async function createMalumCheckoutForm({ amount, currency = 'USD', webhookUrl, successUrl, cancelUrl, customerEmail = '', metadata = '', buyerPaysFees = 0 }) {
