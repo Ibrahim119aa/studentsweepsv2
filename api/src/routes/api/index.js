@@ -8,6 +8,7 @@ fs.readdirSync(apiDir).forEach((file) => {
   if (file === 'index.js' || !file.endsWith('.js')) return;
   const route = require(path.join(apiDir, file));
   const routeName = `/${file.replace('.routes.js', '')}`;
+  
   router.use(routeName, route);
   console.log(`📡 Mounted API route: /api${routeName}`);
 });

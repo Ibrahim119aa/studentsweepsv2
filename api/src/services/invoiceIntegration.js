@@ -11,6 +11,22 @@ const MALUM_WEBHOOK_KEY = process.env.MALUM_WEBHOOK_KEY;
 
 async function createNowPaymentsInvoice({ priceAmount, priceCurrency = 'USD', payCurrency = null, orderId, orderDescription = '', ipnCallbackUrl, successUrl, cancelUrl }) {
   const endpoint = 'https://api.nowpayments.io/v1/invoice';
+
+  // NowPayments minimum amounts (in USD) - vary by cryptocurrency
+  // Basic validation - actual minimum will be enforced by NowPayments API
+  const MINIMUM_AMOUNT_USD = 0.01; // Very low minimum, let API handle actual limits
+
+  // Basic validation to catch obvious errors
+  if (priceAmount < MINIMUM_AMOUNT_USD) {
+    const errorMsg = `Payment amount $${priceAmount.toFixed(2)} is too small. Minimum payment is typically $0.01 USD or higher depending on the cryptocurrency.`;
+    logger.error('createNowPaymentsInvoice.minimum_amount_error', {
+      priceAmount,
+      minimum: MINIMUM_AMOUNT_USD,
+      message: errorMsg
+    });
+    throw new Error(errorMsg);
+  }
+
   const payload = {
     price_amount: priceAmount,
     price_currency: priceCurrency,
@@ -32,8 +48,43 @@ async function createNowPaymentsInvoice({ priceAmount, priceCurrency = 'USD', pa
     logger.info('createNowPaymentsInvoice.response', { id: resp && resp.data && (resp.data.id || resp.data.invoice_id) });
     return resp.data;
   } catch (err) {
-    logger.error('createNowPaymentsInvoice.error', { message: err.message, payload });
-    throw err;
+    // Enhanced error handling for NowPayments API errors
+    let errorMessage = err.message;
+    let errorDetails = {};
+
+    if (err.response && err.response.data) {
+      errorDetails = err.response.data;
+
+      // Parse NowPayments API error messages
+      if (err.response.data.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.response.data.error) {
+        errorMessage = err.response.data.error;
+      } else if (typeof err.response.data === 'string') {
+        errorMessage = err.response.data;
+      }
+
+      // Check for minimum amount errors specifically
+      if (errorMessage.toLowerCase().includes('minimum') ||
+        errorMessage.toLowerCase().includes('less than mini') ||
+        errorMessage.toLowerCase().includes('too small')) {
+        errorMessage = `Payment amount is below NowPayments minimum. The minimum payment amount is typically $${MINIMUM_AMOUNT_USD} USD or equivalent. Please increase your payment amount.`;
+      }
+    }
+
+    logger.error('createNowPaymentsInvoice.error', {
+      message: errorMessage,
+      payload,
+      errorDetails: errorDetails,
+      statusCode: err.response?.status,
+      statusText: err.response?.statusText
+    });
+
+    // Create a more user-friendly error
+    const friendlyError = new Error(errorMessage);
+    friendlyError.statusCode = err.response?.status;
+    friendlyError.originalError = err;
+    throw friendlyError;
   }
 }
 // async function createNowPaymentsInvoice({

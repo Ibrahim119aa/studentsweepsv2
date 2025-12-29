@@ -27,7 +27,7 @@ module.exports = (io, socket) => {
       if (!donation) return socket.emit('donation:purchase:error', { message: 'donation not found' });
 
       const trxID = generateTrxID();
-      
+
       // Get payment provider from payload or default to 'malum' (same as entries purchase)
       const paymentProvider = payload.paymentProvider || 'malum';
 
@@ -64,6 +64,7 @@ module.exports = (io, socket) => {
       const { createNowPaymentsInvoice, createMalumCheckoutForm } = require('../../services/invoiceIntegration');
       const base = process.env.APP_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
       const apiBase = process.env.API_BASE_URL || base;
+      const frontend = process.env.FRONTEND_BASE_URL || base;
       let invoiceResult = null;
 
       if (paymentProvider === 'nowpayments') {
@@ -73,8 +74,8 @@ module.exports = (io, socket) => {
           orderId: trx.trxID,
           orderDescription: `Donation ${donation.name}`,
           ipnCallbackUrl: `${apiBase}/api/webhooks/nowpayments/ipn`,
-          successUrl: `${base}/success`,
-          cancelUrl: `${base}/cancel`
+          successUrl: `${frontend}`,
+          cancelUrl: `${frontend}`
         });
         trx.donation.invoiceId = invoiceResult && (invoiceResult.id || invoiceResult.invoice_id || invoiceResult.invoiceId);
         trx.donation.invoiceData = invoiceResult;
@@ -87,8 +88,8 @@ module.exports = (io, socket) => {
           amount,
           currency: 'USD',
           webhookUrl: `${apiBase}/api/webhooks/malum/webhook`,
-          successUrl: `${base}/success`,
-          cancelUrl: `${base}/cancel`,
+          successUrl: `${frontend}`,
+          cancelUrl: `${frontend}`,
           customerEmail: user.emailAddress,
           metadata: JSON.stringify({ trxID: trx.trxID }),
           buyerPaysFees: 0
