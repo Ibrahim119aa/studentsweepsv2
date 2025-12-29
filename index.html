@@ -2349,6 +2349,7 @@
             let txTotal = 0;
             let txPrizeName = 'Transaction';
             let txStatus = tx.status || 'pending';
+            let isPaid = false; // Track payment status
 
             if (isOrder && tx.order) {
                 txEntries = tx.order.entries?.amount || 0;
@@ -2356,6 +2357,7 @@
                 txTotal = tx.order.entries?.totalCost || (txCost * txEntries);
                 txPrizeName = tx.order.prizeName || 'Prize';
                 txStatus = tx.order.status || txStatus;
+                isPaid = tx.order.isPaid || false; // Check isPaid flag
             } else if (isDonation && tx.donation) {
                 txEntries = 0;
                 // First try the stored amount field, then fall back to invoice data
@@ -2366,6 +2368,7 @@
                     tx.invoiceData?.priceAmount || 0;
                 txPrizeName = tx.donation.name || 'Donation';
                 txCost = txTotal;
+                isPaid = tx.donation.isPaid || false; // Check isPaid flag
             } else {
                 // Fallback to old format
                 txEntries = tx.entries || (tx.isDonation ? 0 : 1);
@@ -2378,11 +2381,27 @@
             const startNum = txEntries > 0 ? Math.floor(Math.random() * Math.max(1, 15000 - txEntries)) : 0;
             const endNum = startNum + txEntries - 1;
 
-            let statusConfig = { color: 'bg-gray-400', icon: 'circle' };
-            if (txStatus === 'active' || txStatus === 'pendingPayment') statusConfig = { color: 'bg-blue-500', icon: 'hourglass' };
-            if (txStatus === 'drawn') statusConfig = { color: 'bg-yellow-500', icon: 'check' };
-            if (txStatus === 'winner' || txStatus === 'drawnWinner' || (txStatus && txStatus.includes('Winner'))) statusConfig = { color: 'bg-green-500', icon: 'trophy' };
-            if (txStatus === 'completed' || isDonation) statusConfig = { color: 'bg-purple-500', icon: 'heart' };
+            // Status configuration - prioritize isPaid flag for accurate display
+            let statusConfig = { color: 'bg-gray-400', icon: 'circle', label: txStatus };
+            let displayStatus = txStatus;
+
+            // If payment is completed, show "Paid" status (green)
+            if (isPaid && (txStatus === 'active' || txStatus === 'pendingPayment')) {
+                statusConfig = { color: 'bg-green-500', icon: 'check-circle', label: 'Paid' };
+                displayStatus = 'Paid';
+            } else if (txStatus === 'active' || txStatus === 'pendingPayment') {
+                statusConfig = { color: 'bg-blue-500', icon: 'hourglass', label: 'Pending Payment' };
+                displayStatus = 'Pending Payment';
+            } else if (txStatus === 'drawn') {
+                statusConfig = { color: 'bg-yellow-500', icon: 'check', label: 'Drawn' };
+                displayStatus = 'Drawn';
+            } else if (txStatus === 'winner' || txStatus === 'drawnWinner' || (txStatus && txStatus.includes('Winner'))) {
+                statusConfig = { color: 'bg-green-500', icon: 'trophy', label: 'Winner' };
+                displayStatus = 'Winner';
+            } else if (txStatus === 'completed' || (isDonation && isPaid)) {
+                statusConfig = { color: 'bg-purple-500', icon: 'heart', label: 'Completed' };
+                displayStatus = isDonation ? 'Completed' : 'Completed';
+            }
 
             const txId = tx._id || tx.id || 'N/A';
             const txDate = new Date(tx.createdAt || tx.date || tx.order?.dateTimestamp || tx.donation?.dateTimestamp || Date.now()).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -2390,7 +2409,7 @@
             document.getElementById('tx-id').textContent = `ID: ${txId}`;
             document.getElementById('tx-prize').textContent = txPrizeName;
             document.getElementById('tx-date').textContent = txDate;
-            document.getElementById('tx-status').innerHTML = `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium text-white ${statusConfig.color}"><i data-lucide="${statusConfig.icon}" class="w-3 h-3 mr-1.5"></i> ${txStatus}</span>`;
+            document.getElementById('tx-status').innerHTML = `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium text-white ${statusConfig.color}"><i data-lucide="${statusConfig.icon}" class="w-3 h-3 mr-1.5"></i> ${displayStatus}</span>`;
             document.getElementById('tx-entries').textContent = isDonation ? 'N/A' : txEntries.toLocaleString();
             document.getElementById('tx-cost').textContent = isDonation ? 'N/A' : `£${txCost.toLocaleString()}`;
             document.getElementById('tx-total').textContent = `£${txTotal.toLocaleString()}`;
@@ -2466,6 +2485,7 @@
                 let txTotal = 0;
                 let txPrizeName = 'Transaction';
                 let txStatus = tx.status || 'pending';
+                let isPaid = false; // Track payment status
 
                 if (isOrder && tx.order) {
                     txEntries = tx.order.entries?.amount || 0;
@@ -2473,6 +2493,7 @@
                     txTotal = tx.order.entries?.totalCost || (txCost * txEntries);
                     txPrizeName = tx.order.prizeName || 'Prize';
                     txStatus = tx.order.status || txStatus;
+                    isPaid = tx.order.isPaid || false; // Check isPaid flag
                 } else if (isDonation && tx.donation) {
                     txEntries = 0; // Donations don't have entries
                     // First try the stored amount field, then fall back to invoice data
@@ -2483,6 +2504,7 @@
                         tx.invoiceData?.priceAmount || 0;
                     txPrizeName = tx.donation.name || 'Donation';
                     txCost = txTotal; // For donations, cost = total
+                    isPaid = tx.donation.isPaid || false; // Check isPaid flag
                 } else {
                     // Fallback to old format for backward compatibility
                     txEntries = tx.entries || (tx.isDonation ? 0 : 1);
@@ -2491,12 +2513,27 @@
                     txPrizeName = tx.prizeName || tx.donationName || tx.prize?.name || tx.donation?.name || 'Transaction';
                 }
 
-                // Status configuration
-                let statusConfig = { color: 'bg-gray-400', icon: 'circle' };
-                if (txStatus === 'active' || txStatus === 'pendingPayment') statusConfig = { color: 'bg-blue-500', icon: 'hourglass' };
-                if (txStatus === 'drawn') statusConfig = { color: 'bg-yellow-500', icon: 'check' };
-                if (txStatus === 'winner' || txStatus === 'drawnWinner' || (txStatus && txStatus.includes('Winner'))) statusConfig = { color: 'bg-green-500', icon: 'trophy' };
-                if (txStatus === 'completed' || isDonation) statusConfig = { color: 'bg-purple-500', icon: 'heart' };
+                // Status configuration - prioritize isPaid flag for accurate display
+                let statusConfig = { color: 'bg-gray-400', icon: 'circle', label: txStatus };
+                let displayStatus = txStatus;
+
+                // If payment is completed, show "Paid" status (green)
+                if (isPaid && (txStatus === 'active' || txStatus === 'pendingPayment')) {
+                    statusConfig = { color: 'bg-green-500', icon: 'check-circle', label: 'Paid' };
+                    displayStatus = 'Paid';
+                } else if (txStatus === 'active' || txStatus === 'pendingPayment') {
+                    statusConfig = { color: 'bg-blue-500', icon: 'hourglass', label: 'Pending Payment' };
+                    displayStatus = 'Pending Payment';
+                } else if (txStatus === 'drawn') {
+                    statusConfig = { color: 'bg-yellow-500', icon: 'check', label: 'Drawn' };
+                    displayStatus = 'Drawn';
+                } else if (txStatus === 'winner' || txStatus === 'drawnWinner' || (txStatus && txStatus.includes('Winner'))) {
+                    statusConfig = { color: 'bg-green-500', icon: 'trophy', label: 'Winner' };
+                    displayStatus = 'Winner';
+                } else if (txStatus === 'completed' || (isDonation && isPaid)) {
+                    statusConfig = { color: 'bg-purple-500', icon: 'heart', label: 'Completed' };
+                    displayStatus = isDonation ? 'Completed' : 'Completed';
+                }
 
                 const txDate = new Date(tx.createdAt || tx.date || tx.order?.dateTimestamp || tx.donation?.dateTimestamp).toLocaleDateString('en-GB');
                 const txId = tx._id || tx.id || '';
@@ -2509,7 +2546,7 @@
                         <td class="py-3 px-2 sm:px-4 text-center font-semibold text-accent text-xs sm:text-sm">£${txTotal.toLocaleString()}</td>
                         <td class="py-3 px-2 sm:px-4 text-center">
                             <span class="inline-flex items-center px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium text-white ${statusConfig.color}">
-                                <i data-lucide="${statusConfig.icon}" class="w-2 h-2 sm:w-3 sm:h-3 mr-1 sm:mr-1.5"></i> ${txStatus}
+                                <i data-lucide="${statusConfig.icon}" class="w-2 h-2 sm:w-3 sm:h-3 mr-1 sm:mr-1.5"></i> ${displayStatus}
                             </span>
                         </td>
                         <td class="py-3 px-2 sm:px-4 text-right">${txId ? `<button onclick="handleViewTransaction('${txId}')" class="text-accent text-xs sm:text-sm font-semibold">View</button>` : '<span class="text-gray-400 text-xs sm:text-sm">-</span>'}</td>

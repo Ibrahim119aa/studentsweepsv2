@@ -239,6 +239,9 @@ window.SocketClient = (function() {
     socket.on('donation:purchase:invoice', onDonationPurchaseInvoice);
     socket.on('donation:purchase:created', onDonationPurchaseCreated);
     socket.on('donation:purchase:error', onDonationPurchaseError);
+    
+    // Payment completion events - refresh transactions when payment is completed
+    socket.on('payments:paid', onPaymentPaid);
 
     // Utility events
     socket.on('newsletter:subscribe:response', onNewsletterResponse);
@@ -738,6 +741,21 @@ window.SocketClient = (function() {
     console.log('[SocketClient] Donation created:', data.trxID);
     if (window.showMessage) window.showMessage('Thank you! ' + data.trxID, 'success');
     setTimeout(() => requestMyTransactions(), 500);
+  }
+
+  function onPaymentPaid(data) {
+    console.log('[SocketClient] Payment completed:', data.trxID, 'Provider:', data.provider);
+    if (window.showMessage) {
+      window.showMessage('Payment completed successfully!', 'success');
+    }
+    // Refresh transactions to show updated status
+    setTimeout(() => requestMyTransactions(), 1000);
+    // Re-render profile page if user is on it
+    if (window.currentPage === 'profile' && window.renderProfilePage) {
+      setTimeout(() => {
+        if (window.renderProfilePage) window.renderProfilePage();
+      }, 1500);
+    }
   }
 
   function onDonationPurchaseError(data) {
