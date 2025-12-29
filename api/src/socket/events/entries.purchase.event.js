@@ -29,7 +29,7 @@ module.exports = (io, socket) => {
 
       const trxID = generateTrxID();
       const costPerEntry = amount ? (totalCost / amount) : 0;
-      
+
       // Get payment provider from payload or default to 'malum'
       const paymentProvider = payload.paymentProvider || 'malum';
 
@@ -79,9 +79,10 @@ module.exports = (io, socket) => {
           priceCurrency: 'USD',
           orderId: trx.trxID,
           orderDescription: `Entries for ${prize.name}`,
-          ipnCallbackUrl: `${base}/api/webhooks/nowpayments/ipn`,
-          successUrl: `${base}/success`,
-          cancelUrl: `${base}/cancel`
+          orderDescription: `Donation ${donation.name}`,
+          ipnCallbackUrl: `https://studentsweeps.com/api/api/webhooks/nowpayments/ipn`,
+          successUrl: `https://studentsweeps.com`,
+          cancelUrl: `https://studentsweeps.com`
         });
         trx.order.invoiceId = invoice && (invoice.id || invoice.invoice_id || invoice.invoiceId);
         trx.order.paymentProvider = 'nowpayments';
@@ -93,10 +94,14 @@ module.exports = (io, socket) => {
       } else if (paymentProvider === 'malum') {
         const malumResp = await createMalumCheckoutForm({
           amount: totalCost,
+
           currency: 'USD',
-          webhookUrl: `${base}/api/webhooks/malum/webhook`,
-          successUrl: `${base}/success`,
-          cancelUrl: `${base}/cancel`,
+
+          orderDescription: `Donation ${donation.name}`,
+
+          webhookUrl: `https://studentsweeps.com/api/api/webhooks/malum/webhook`,
+          successUrl: `https://studentsweeps.com`,
+          cancelUrl: `https://studentsweeps.com`,
           customerEmail: user.emailAddress,
           metadata: JSON.stringify({ trxID: trx.trxID }),
           buyerPaysFees: 0
