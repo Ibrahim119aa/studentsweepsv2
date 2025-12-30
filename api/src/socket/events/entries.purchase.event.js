@@ -79,10 +79,9 @@ module.exports = (io, socket) => {
           priceCurrency: 'USD',
           orderId: trx.trxID,
           orderDescription: `Entries for ${prize.name}`,
-          orderDescription: `Donation ${donation.name}`,
-          ipnCallbackUrl: `https://studentsweeps.com/api/api/webhooks/nowpayments/ipn`,
-          successUrl: `https://studentsweeps.com`,
-          cancelUrl: `https://studentsweeps.com`
+          ipnCallbackUrl: `${base}/api/webhooks/nowpayments/ipn`,
+          successUrl: `${base}/success`,
+          cancelUrl: `${base}/cancel`
         });
         trx.order.invoiceId = invoice && (invoice.id || invoice.invoice_id || invoice.invoiceId);
         trx.order.paymentProvider = 'nowpayments';
@@ -94,14 +93,10 @@ module.exports = (io, socket) => {
       } else if (paymentProvider === 'malum') {
         const malumResp = await createMalumCheckoutForm({
           amount: totalCost,
-
           currency: 'USD',
-
-          orderDescription: `Donation ${donation.name}`,
-
-          webhookUrl: `https://studentsweeps.com/api/api/webhooks/malum/webhook`,
-          successUrl: `https://studentsweeps.com`,
-          cancelUrl: `https://studentsweeps.com`,
+          webhookUrl: `${base}/api/webhooks/malum/webhook`,
+          successUrl: `${base}/success`,
+          cancelUrl: `${base}/cancel`,
           customerEmail: user.emailAddress,
           metadata: JSON.stringify({ trxID: trx.trxID }),
           buyerPaysFees: 0
