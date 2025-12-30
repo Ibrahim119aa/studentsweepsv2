@@ -13,14 +13,12 @@ async function createNowPaymentsInvoice({ priceAmount, priceCurrency = 'USD', pa
   const endpoint = 'https://api.nowpayments.io/v1/invoice';
 
   // NowPayments minimum amounts (in USD) - vary by cryptocurrency
-  // BTC minimum is typically $10-15 USD due to network fees
-  // Other cryptocurrencies may have different minimums
-  // Note: Actual minimums are enforced by NowPayments API and can change
-  const MINIMUM_AMOUNT_USD = 10.00; // Conservative minimum for BTC and most cryptocurrencies
+  // Basic validation - actual minimum will be enforced by NowPayments API
+  const MINIMUM_AMOUNT_USD = 0.01; // Very low minimum, let API handle actual limits
 
-  // Basic validation to catch obvious errors before API call
+  // Basic validation to catch obvious errors
   if (priceAmount < MINIMUM_AMOUNT_USD) {
-    const errorMsg = `Payment amount $${priceAmount.toFixed(2)} is below NowPayments minimum of $${MINIMUM_AMOUNT_USD} USD. For cryptocurrency payments, the minimum is typically $10-15 USD due to network fees. Please increase your payment amount or use a different payment method for smaller amounts.`;
+    const errorMsg = `Payment amount $${priceAmount.toFixed(2)} is too small. Minimum payment is typically $0.01 USD or higher depending on the cryptocurrency.`;
     logger.error('createNowPaymentsInvoice.minimum_amount_error', {
       priceAmount,
       minimum: MINIMUM_AMOUNT_USD,
@@ -69,11 +67,8 @@ async function createNowPaymentsInvoice({ priceAmount, priceCurrency = 'USD', pa
       // Check for minimum amount errors specifically
       if (errorMessage.toLowerCase().includes('minimum') ||
         errorMessage.toLowerCase().includes('less than mini') ||
-        errorMessage.toLowerCase().includes('too small') ||
-        errorMessage.toLowerCase().includes('minimal')) {
-        // Extract the actual minimum from error if possible, or use default
-        const actualMinimum = errorMessage.match(/\$?([\d.]+)/)?.[1] || MINIMUM_AMOUNT_USD;
-        errorMessage = `Payment amount $${priceAmount.toFixed(2)} is below NowPayments minimum. Cryptocurrency payments require a minimum of $${actualMinimum} USD (or equivalent) due to network fees. For smaller amounts, please use a different payment method like credit/debit card.`;
+        errorMessage.toLowerCase().includes('too small')) {
+        errorMessage = `Payment amount is below NowPayments minimum. The minimum payment amount is typically $${MINIMUM_AMOUNT_USD} USD or equivalent. Please increase your payment amount.`;
       }
     }
 
