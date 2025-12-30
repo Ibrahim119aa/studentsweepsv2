@@ -2422,6 +2422,11 @@
         function renderProfilePage() {
             if (currentInterval) clearInterval(currentInterval);
             if (!isLoggedIn || !currentUser) { changePage('home'); openAuthModal(); return; }
+            
+            // Ensure transactions are loaded
+            if (window.SocketClient && window.SocketClient.requestMyTransactions) {
+                window.SocketClient.requestMyTransactions();
+            }
 
             // Normalized user display fields
             const _cu = currentUser || {};
@@ -2435,44 +2440,98 @@
 
             // User stats from backend (or calculated from transactions)
             const transactions = window.TRANSACTIONS || [];
+            console.log('[Profile] Calculating stats from', transactions.length, 'transactions');
+            
             const calculateTotalSpent = () => {
-                return transactions.reduce((acc, tx) => {
-                    if (tx.category === 'order' && tx.order?.entries) {
-                        return acc + (tx.order.entries.totalCost || 0);
-                    } else if (tx.category === 'donation' && tx.donation) {
-                        // First try the stored amount field, then fall back to invoice data
-                        const amount = tx.donation.amount ||
-                            tx.donation.invoiceData?.amount ||
-                            tx.donation.invoiceData?.priceAmount ||
-                            tx.invoiceData?.amount ||
-                            tx.invoiceData?.priceAmount || 0;
-                        return acc + amount;
-                    } else {
-                        // Fallback for old format
-                        return acc + ((tx.cost || 0) * (tx.entries || 1));
-                    }
-                }, 0);
+                try {
+                    return transactions.reduce((acc, tx) => {
+                        try {
+                            if (tx.category === 'order' && tx.order?.entries) {
+                                const cost = tx.order.entries.totalCost || 0;
+                                return acc + parseFloat(cost) || 0;
+                            } else if (tx.category === 'donation' && tx.donation) {
+                                // First try the stored amount field, then fall back to invoice data
+                                const amount = tx.donation.amount ||
+                                    tx.donation.invoiceData?.amount ||
+                                    tx.donation.invoiceData?.priceAmount ||
+                                    tx.donation.invoiceData?.price_amount ||
+                                    tx.invoiceData?.amount ||
+                                    tx.invoiceData?.priceAmount ||
+                                    tx.invoiceData?.price_amount || 0;
+                                return acc + (parseFloat(amount) || 0);
+                            } else {
+                                // Fallback for old format
+                                const cost = tx.cost || 0;
+                                const entries = tx.entries || 1;
+                                return acc + ((parseFloat(cost) || 0) * (parseFloat(entries) || 1));
+                            }
+                        } catch (e) {
+                            console.warn('[Profile] Error calculating cost for transaction:', tx._id || tx.id, e);
+                            return acc;
+                        }
+                    }, 0);
+                } catch (e) {
+                    console.error('[Profile] Error in calculateTotalSpent:', e);
+                    return 0;
+                }
             };
+            
             const calculateTotalEntries = () => {
-                return transactions.reduce((acc, tx) => {
-                    if (tx.category === 'order' && tx.order?.entries) {
-                        return acc + (tx.order.entries.amount || 0);
-                    } else if (tx.category !== 'donation') {
-                        // Fallback for old format
-                        return acc + (tx.entries || 1);
-                    }
-                    return acc;
-                }, 0);
+                try {
+                    return transactions.reduce((acc, tx) => {
+                        try {
+                            if (tx.category === 'order' && tx.order?.entries) {
+                                const entries = tx.order.entries.amount || 0;
+                                return acc + (parseFloat(entries) || 0);
+                            } else if (tx.category !== 'donation') {
+                                // Fallback for old format
+                                const entries = tx.entries || 1;
+                                return acc + (parseFloat(entries) || 0);
+                            }
+                            return acc;
+                        } catch (e) {
+                            console.warn('[Profile] Error calculating entries for transaction:', tx._id || tx.id, e);
+                            return acc;
+                        }
+                    }, 0);
+                } catch (e) {
+                    console.error('[Profile] Error in calculateTotalEntries:', e);
+                    return 0;
+                }
             };
+            
+            const calculateTotalOrders = () => {
+                try {
+                    // Only count orders (not donations)
+                    return transactions.filter(tx => {
+                        return tx.category === 'order' || (!tx.category && !tx.isDonation);
+                    }).length;
+                } catch (e) {
+                    console.error('[Profile] Error in calculateTotalOrders:', e);
+                    return 0;
+                }
+            };
+            
+            const calculatePrizesWon = () => {
+                try {
+                    return transactions.filter(tx => {
+                        const status = tx.order?.status || tx.status || '';
+                        return status === 'winner' || status === 'drawnWinner' || (status && status.includes('Winner'));
+                    }).length;
+                } catch (e) {
+                    console.error('[Profile] Error in calculatePrizesWon:', e);
+                    return 0;
+                }
+            };
+            
             const userStats = _cu.stats || {
-                totalOrders: transactions.length,
+                totalOrders: calculateTotalOrders(),
                 totalEntries: calculateTotalEntries(),
                 totalSpent: calculateTotalSpent(),
-                prizesWon: transactions.filter(tx => {
-                    const status = tx.order?.status || tx.status || '';
-                    return status === 'winner' || status === 'drawnWinner' || (status && status.includes('Winner'));
-                }).length
+                prizesWon: calculatePrizesWon()
             };
+            
+            console.log('[Profile] Calculated stats:', userStats);
 
             const transactionsHtml = (window.TRANSACTIONS || []).map(tx => {
                 // Handle different transaction structures based on category
