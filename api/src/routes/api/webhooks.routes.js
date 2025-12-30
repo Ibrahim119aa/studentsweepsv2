@@ -49,10 +49,27 @@ router.post('/nowpayments/ipn', bodyParser.json(), async (req, res) => {
     }
 
     // 2. Sort parameters alphabetically and convert to string per documentation
+    // NowPayments requires RECURSIVE sorting of all nested objects
     const params = req.body;
-    const sortedString = JSON.stringify(params, Object.keys(params).sort());
+    
+    // Recursive sort function for nested objects (required by NowPayments)
+    function sortObjectRecursively(obj) {
+      if (obj === null || typeof obj !== 'object' || obj instanceof Array) {
+        return obj;
+      }
+      return Object.keys(obj).sort().reduce((result, key) => {
+        result[key] = (obj[key] && typeof obj[key] === 'object' && !(obj[key] instanceof Array)) 
+          ? sortObjectRecursively(obj[key]) 
+          : obj[key];
+        return result;
+      }, {});
+    }
+    
+    const sortedParams = sortObjectRecursively(params);
+    const sortedString = JSON.stringify(sortedParams);
 
-    console.log('🔔 [NOWPAYMENTS WEBHOOK] Payment params:', JSON.stringify(params, null, 2));
+    console.log('🔔 [NOWPAYMENTS WEBHOOK] Original params:', JSON.stringify(params, null, 2));
+    console.log('🔔 [NOWPAYMENTS WEBHOOK] Sorted params for signature:', sortedString);
     logger.error('nowpayments.ipn.received', { params: sortedString });
 
     // 3. Sign the string with IPN-secret key using HMAC and SHA-512
@@ -66,18 +83,26 @@ router.post('/nowpayments/ipn', bodyParser.json(), async (req, res) => {
     // 4. Verify signature if provided
     if (receivedSignature) {
       console.log('🔔 [NOWPAYMENTS WEBHOOK] Verifying signature...');
+      console.log('🔔 [NOWPAYMENTS WEBHOOK] String being signed:', sortedString);
+      console.log('🔔 [NOWPAYMENTS WEBHOOK] IPN Secret length:', ipnSecret ? ipnSecret.length : 'MISSING');
+      
       const hmac = crypto.createHmac('sha512', ipnSecret);
       hmac.update(sortedString);
       const calculatedSignature = hmac.digest('hex');
 
+      console.log('🔔 [NOWPAYMENTS WEBHOOK] Received signature (first 40 chars):', receivedSignature?.substring(0, 40));
+      console.log('🔔 [NOWPAYMENTS WEBHOOK] Calculated signature (first 40 chars):', calculatedSignature?.substring(0, 40));
+
       // Compare signatures
       if (receivedSignature !== calculatedSignature) {
         console.error('❌ [NOWPAYMENTS WEBHOOK] Signature mismatch!');
-        console.error('   Received:', receivedSignature?.substring(0, 20) + '...');
-        console.error('   Calculated:', calculatedSignature?.substring(0, 20) + '...');
+        console.error('   Received (full):', receivedSignature);
+        console.error('   Calculated (full):', calculatedSignature);
+        console.error('   Sorted JSON used:', sortedString);
         logger.warn('nowpayments.ipn.signature_mismatch', { 
           received: receivedSignature, 
-          calculated: calculatedSignature 
+          calculated: calculatedSignature,
+          sortedString: sortedString
         });
         
         const io = eventBus.getIO();
