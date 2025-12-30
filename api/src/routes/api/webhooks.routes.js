@@ -118,12 +118,39 @@ router.post('/nowpayments/ipn', bodyParser.json(), async (req, res) => {
     }
 
     // 5. Process the payload
-    const { payment_status, order_id, invoice_id, pay_amount, pay_currency } = params;
+    // Extract all relevant fields from the payload
+    const { 
+      payment_status, 
+      order_id, 
+      invoice_id, 
+      pay_amount,           // Crypto amount paid
+      pay_currency,          // Crypto currency (e.g., "sol", "btc")
+      price_amount,         // USD amount requested
+      price_currency,       // USD
+      actually_paid_at_fiat // Actual USD amount paid (most accurate)
+    } = params;
+    
     console.log('🔔 [NOWPAYMENTS WEBHOOK] Payment Status:', payment_status);
     console.log('🔔 [NOWPAYMENTS WEBHOOK] Order ID:', order_id);
     console.log('🔔 [NOWPAYMENTS WEBHOOK] Invoice ID:', invoice_id);
-    console.log('🔔 [NOWPAYMENTS WEBHOOK] Amount:', pay_amount, pay_currency);
-    logger.info('nowpayments.ipn.received', { payment_status, order_id, invoice_id });
+    console.log('🔔 [NOWPAYMENTS WEBHOOK] Crypto Amount:', pay_amount, pay_currency);
+    console.log('🔔 [NOWPAYMENTS WEBHOOK] USD Amount:', price_amount, price_currency);
+    console.log('🔔 [NOWPAYMENTS WEBHOOK] Actually Paid (USD):', actually_paid_at_fiat);
+    
+    // Validate required fields
+    if (!order_id) {
+      console.error('❌ [NOWPAYMENTS WEBHOOK] Missing order_id in payload');
+      logger.warn('nowpayments.ipn.missing_order_id', { params });
+      return res.status(400).send('Missing order_id');
+    }
+    
+    if (!payment_status) {
+      console.error('❌ [NOWPAYMENTS WEBHOOK] Missing payment_status in payload');
+      logger.warn('nowpayments.ipn.missing_payment_status', { params });
+      return res.status(400).send('Missing payment_status');
+    }
+    
+    logger.info('nowpayments.ipn.received', { payment_status, order_id, invoice_id, price_amount, actually_paid_at_fiat });
 
     const trx = await Transaction.findOne({ trxID: order_id });
     if (!trx) {
@@ -154,12 +181,16 @@ router.post('/nowpayments/ipn', bodyParser.json(), async (req, res) => {
         try {
           const donationRecord = await Donation.findOne({ name: trx.donation.name });
           if (donationRecord) {
-            // Use pay_amount from payload or fallback to 0
-            donationRecord.raised = (donationRecord.raised || 0) + (parseFloat(pay_amount) || 0);
+            // Use actually_paid_at_fiat (most accurate USD amount) or fallback to price_amount (requested USD amount)
+            // DO NOT use pay_amount as it's in crypto currency (e.g., SOL, BTC)
+            const usdAmount = parseFloat(actually_paid_at_fiat) || parseFloat(price_amount) || 0;
+            donationRecord.raised = (donationRecord.raised || 0) + usdAmount;
             await donationRecord.save();
+            console.log(`✅ [NOWPAYMENTS WEBHOOK] Donation "${trx.donation.name}" raised amount updated by $${usdAmount}`);
           }
         } catch (e) {
-          logger.error('nowpayments.ipn.donationUpdateFailed', { err: e.message });
+          console.error('❌ [NOWPAYMENTS WEBHOOK] Failed to update donation raised amount:', e.message);
+          logger.error('nowpayments.ipn.donationUpdateFailed', { err: e.message, donationName: trx.donation.name });
         }
       }
 
