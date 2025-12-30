@@ -2423,9 +2423,15 @@
             if (currentInterval) clearInterval(currentInterval);
             if (!isLoggedIn || !currentUser) { changePage('home'); openAuthModal(); return; }
             
-            // Ensure transactions are loaded
-            if (window.SocketClient && window.SocketClient.requestMyTransactions) {
+            // Only request transactions if they haven't been loaded yet and we're not already loading
+            // Don't request on every render to avoid infinite loops
+            if ((!window.TRANSACTIONS || window.TRANSACTIONS.length === 0) && 
+                !window.TRANSACTIONS_LOADING && 
+                window.SocketClient && 
+                window.SocketClient.requestMyTransactions) {
+                window.TRANSACTIONS_LOADING = true;
                 window.SocketClient.requestMyTransactions();
+                // Don't return early - render with empty transactions, will update when loaded
             }
 
             // Normalized user display fields

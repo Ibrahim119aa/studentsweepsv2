@@ -581,10 +581,14 @@ window.SocketClient = (function() {
 
   function onMyTransactionsResponse(data) {
     console.log('[SocketClient] onMyTransactionsResponse received:', data);
-    if (!data) return;
+    if (!data) {
+      window.TRANSACTIONS_LOADING = false;
+      return;
+    }
     const transactions = data.success === false ? [] : (data.transactions || data.data || []);
     console.log('[SocketClient] Transactions loaded:', transactions.length);
     window.TRANSACTIONS = Array.isArray(transactions) ? transactions : [];
+    window.TRANSACTIONS_LOADING = false; // Clear loading flag
     dataLoadedCount++;
     checkAllDataLoaded();
     // Re-render profile page if user is on it
