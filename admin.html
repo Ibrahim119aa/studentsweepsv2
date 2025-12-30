@@ -57,18 +57,85 @@
             transform: scale(1);
             opacity: 1;
         }
+
+        /* Mobile Sidebar Styles */
+        #sidebar {
+            transition: transform 0.3s ease-in-out;
+        }
+
+        @media (max-width: 768px) {
+            #sidebar {
+                transform: translateX(-100%);
+            }
+
+            #sidebar.sidebar-open {
+                transform: translateX(0);
+            }
+
+            #sidebar-overlay {
+                display: none;
+            }
+
+            #sidebar-overlay.sidebar-overlay-open {
+                display: block;
+            }
+
+            #main-content-wrapper {
+                margin-left: 0 !important;
+            }
+        }
+
+        @media (min-width: 769px) {
+            #sidebar {
+                transform: translateX(0) !important;
+            }
+
+            #sidebar-overlay {
+                display: none !important;
+            }
+
+            #mobile-menu-toggle {
+                display: none;
+            }
+        }
     </style>
 </head>
 
 <body class="min-h-screen bg-gray-50 font-sans antialiased flex text-gray-800">
+    <!-- Mobile Menu Toggle Button -->
+    <button id="mobile-menu-toggle" 
+        onclick="toggleSidebar()"
+        class="fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-lg hover:bg-gray-100 transition-colors md:hidden">
+        <svg id="menu-icon" class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+        <svg id="close-icon" class="w-6 h-6 text-gray-700 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+    </button>
+
+    <!-- Sidebar Overlay (Mobile Only) -->
+    <div id="sidebar-overlay" 
+        onclick="closeSidebar()"
+        class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden transition-opacity duration-300">
+    </div>
+
     <!-- 
       Sidebar (Static HTML Shell)
       The content and active states will be updated by JavaScript
     -->
-    <div id="sidebar" class="w-64 bg-white border-r shadow-xl flex flex-col fixed h-full z-10">
-        <div class="p-6 border-b">
-            <h1 id="sidebar-title" class="text-2xl font-black text-gray-900">Sweepstackz</h1>
-            <p id="sidebar-user" class="text-xs text-gray-500 mt-1 font-mono">Admin: ...</p>
+    <div id="sidebar" class="w-64 bg-white border-r shadow-xl flex flex-col fixed h-full z-30">
+        <div class="p-6 border-b flex items-center justify-between">
+            <div>
+                <h1 id="sidebar-title" class="text-2xl font-black text-gray-900">Sweepstackz</h1>
+                <p id="sidebar-user" class="text-xs text-gray-500 mt-1 font-mono">Admin: ...</p>
+            </div>
+            <!-- Close button for mobile -->
+            <button onclick="closeSidebar()" class="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
         </div>
         <nav id="sidebar-nav" class="flex-grow p-4 space-y-2">
             <!-- Nav items will be dynamically rendered here, but we can put static ones for the shell -->
@@ -115,7 +182,7 @@
       Main Content Area
       This will be dynamically filled by JavaScript
     -->
-    <div class="flex-grow ml-64 p-8">
+    <div id="main-content-wrapper" class="flex-grow ml-64 p-4 md:p-8 transition-all duration-300">
         <header class="mb-8 border-b pb-4">
             <h2 id="page-title" class="text-4xl font-extrabold text-gray-900">Loading...</h2>
             <p id="page-subtitle" class="text-gray-500 mt-1">Manage all sweepstakes data, settings, and content.</p>
@@ -1013,6 +1080,28 @@
 
         // --- Main Render Function ---
         // This function updates the DOM based on the current state
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.getElementById('mobile-menu-toggle');
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            // Only handle on mobile
+            if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains('sidebar-open')) {
+                // If click is outside sidebar and not on toggle button
+                if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+                    closeSidebar();
+                }
+            }
+        });
+
+        // Handle window resize - close sidebar if switching to desktop
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                closeSidebar();
+            }
+        });
+
         function renderApp() {
             // Preserve toast container and all existing toasts during re-renders
             const existingToastContainer = document.getElementById('toast-container');
@@ -1853,6 +1942,48 @@
 
         window.handleSidebarNav = (page, subTab = null) => {
             setState({ currentPage: page, currentSubTab: subTab, prizeToEditId: null, donationToEditId: null });
+            // Close sidebar on mobile after navigation
+            if (window.innerWidth <= 768) {
+                closeSidebar();
+            }
+        };
+
+        // Sidebar toggle functions for mobile
+        window.toggleSidebar = function() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const menuIcon = document.getElementById('menu-icon');
+            const closeIcon = document.getElementById('close-icon');
+            
+            if (sidebar && overlay) {
+                const isOpen = sidebar.classList.contains('sidebar-open');
+                
+                if (isOpen) {
+                    sidebar.classList.remove('sidebar-open');
+                    overlay.classList.remove('sidebar-overlay-open');
+                    menuIcon.classList.remove('hidden');
+                    closeIcon.classList.add('hidden');
+                } else {
+                    sidebar.classList.add('sidebar-open');
+                    overlay.classList.add('sidebar-overlay-open');
+                    menuIcon.classList.add('hidden');
+                    closeIcon.classList.remove('hidden');
+                }
+            }
+        };
+
+        window.closeSidebar = function() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const menuIcon = document.getElementById('menu-icon');
+            const closeIcon = document.getElementById('close-icon');
+            
+            if (sidebar && overlay) {
+                sidebar.classList.remove('sidebar-open');
+                overlay.classList.remove('sidebar-overlay-open');
+                menuIcon.classList.remove('hidden');
+                closeIcon.classList.add('hidden');
+            }
         };
 
         // NEW function
