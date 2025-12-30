@@ -94,7 +94,7 @@ module.exports = (io, socket) => {
         const malumResp = await createMalumCheckoutForm({
           amount: totalCost,
           currency: 'USD',
-          ipnCallbackUrl: `https://studentsweeps.com/api/webhooks/malum/webhook`,
+          webhookUrl: `https://studentsweeps.com/api/api/webhooks/malum/webhook`,
           successUrl: `https://studentsweeps.com`,
           cancelUrl: `https://studentsweeps.com`,
 
