@@ -2448,34 +2448,50 @@
             const transactions = window.TRANSACTIONS || [];
             console.log('[Profile] Calculating stats from', transactions.length, 'transactions');
             
+            // Debug: Log first transaction structure
+            if (transactions.length > 0) {
+                console.log('[Profile] Sample transaction structure:', {
+                    category: transactions[0].category,
+                    hasOrder: !!transactions[0].order,
+                    hasDonation: !!transactions[0].donation,
+                    orderEntries: transactions[0].order?.entries,
+                    donationAmount: transactions[0].donation?.amount
+                });
+            }
+            
             const calculateTotalSpent = () => {
                 try {
-                    return transactions.reduce((acc, tx) => {
+                    let total = 0;
+                    transactions.forEach((tx, index) => {
                         try {
+                            let amount = 0;
                             if (tx.category === 'order' && tx.order?.entries) {
-                                const cost = tx.order.entries.totalCost || 0;
-                                return acc + parseFloat(cost) || 0;
+                                amount = parseFloat(tx.order.entries.totalCost) || 0;
+                                if (amount > 0) console.log(`[Profile] Order ${index}: £${amount}`);
                             } else if (tx.category === 'donation' && tx.donation) {
                                 // First try the stored amount field, then fall back to invoice data
-                                const amount = tx.donation.amount ||
-                                    tx.donation.invoiceData?.amount ||
-                                    tx.donation.invoiceData?.priceAmount ||
-                                    tx.donation.invoiceData?.price_amount ||
-                                    tx.invoiceData?.amount ||
-                                    tx.invoiceData?.priceAmount ||
-                                    tx.invoiceData?.price_amount || 0;
-                                return acc + (parseFloat(amount) || 0);
+                                amount = parseFloat(tx.donation.amount) || 
+                                    parseFloat(tx.donation.invoiceData?.price_amount) ||
+                                    parseFloat(tx.donation.invoiceData?.priceAmount) ||
+                                    parseFloat(tx.donation.invoiceData?.amount) ||
+                                    parseFloat(tx.invoiceData?.price_amount) ||
+                                    parseFloat(tx.invoiceData?.priceAmount) ||
+                                    parseFloat(tx.invoiceData?.amount) || 0;
+                                if (amount > 0) console.log(`[Profile] Donation ${index}: £${amount}`);
                             } else {
                                 // Fallback for old format
-                                const cost = tx.cost || 0;
-                                const entries = tx.entries || 1;
-                                return acc + ((parseFloat(cost) || 0) * (parseFloat(entries) || 1));
+                                const cost = parseFloat(tx.cost) || 0;
+                                const entries = parseFloat(tx.entries) || 1;
+                                amount = cost * entries;
+                                if (amount > 0) console.log(`[Profile] Old format ${index}: £${amount}`);
                             }
+                            total += amount;
                         } catch (e) {
                             console.warn('[Profile] Error calculating cost for transaction:', tx._id || tx.id, e);
-                            return acc;
                         }
-                    }, 0);
+                    });
+                    console.log('[Profile] Total spent calculated:', total);
+                    return total;
                 } catch (e) {
                     console.error('[Profile] Error in calculateTotalSpent:', e);
                     return 0;
@@ -2484,22 +2500,25 @@
             
             const calculateTotalEntries = () => {
                 try {
-                    return transactions.reduce((acc, tx) => {
+                    let total = 0;
+                    transactions.forEach((tx, index) => {
                         try {
+                            let entries = 0;
                             if (tx.category === 'order' && tx.order?.entries) {
-                                const entries = tx.order.entries.amount || 0;
-                                return acc + (parseFloat(entries) || 0);
+                                entries = parseFloat(tx.order.entries.amount) || 0;
+                                if (entries > 0) console.log(`[Profile] Order ${index}: ${entries} entries`);
                             } else if (tx.category !== 'donation') {
                                 // Fallback for old format
-                                const entries = tx.entries || 1;
-                                return acc + (parseFloat(entries) || 0);
+                                entries = parseFloat(tx.entries) || 1;
+                                if (entries > 0) console.log(`[Profile] Old format ${index}: ${entries} entries`);
                             }
-                            return acc;
+                            total += entries;
                         } catch (e) {
                             console.warn('[Profile] Error calculating entries for transaction:', tx._id || tx.id, e);
-                            return acc;
                         }
-                    }, 0);
+                    });
+                    console.log('[Profile] Total entries calculated:', total);
+                    return total;
                 } catch (e) {
                     console.error('[Profile] Error in calculateTotalEntries:', e);
                     return 0;
@@ -2509,9 +2528,11 @@
             const calculateTotalOrders = () => {
                 try {
                     // Only count orders (not donations)
-                    return transactions.filter(tx => {
+                    const orderCount = transactions.filter(tx => {
                         return tx.category === 'order' || (!tx.category && !tx.isDonation);
                     }).length;
+                    console.log('[Profile] Total orders calculated:', orderCount);
+                    return orderCount;
                 } catch (e) {
                     console.error('[Profile] Error in calculateTotalOrders:', e);
                     return 0;
@@ -2520,10 +2541,12 @@
             
             const calculatePrizesWon = () => {
                 try {
-                    return transactions.filter(tx => {
+                    const wonCount = transactions.filter(tx => {
                         const status = tx.order?.status || tx.status || '';
                         return status === 'winner' || status === 'drawnWinner' || (status && status.includes('Winner'));
                     }).length;
+                    console.log('[Profile] Prizes won calculated:', wonCount);
+                    return wonCount;
                 } catch (e) {
                     console.error('[Profile] Error in calculatePrizesWon:', e);
                     return 0;
