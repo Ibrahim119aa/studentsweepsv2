@@ -1925,7 +1925,14 @@
         function handleSupportClick(event) { event.preventDefault(); toggleProfileDropdown(); showMessage(`For support, email us at <br><span class="font-semibold text-accent">support@studentsweeps.com</span>.`); }
 
         function handleEntryPurchase(itemName, itemPrice, isDonation = false, prizeId = null) {
-            if (!isLoggedIn) { showMessage(`Please sign in to purchase.`); openAuthModal(); return; }
+            if (!isLoggedIn) { 
+                showMessage(`Please sign in to purchase.`); 
+                openAuthModal(); 
+                return; 
+            }
+
+            // Ensure any existing checkout modal is closed first
+            closeCheckoutModal();
 
             if (isDonation) {
                 const amountInput = document.getElementById('donation-amount-input');
@@ -1947,6 +1954,11 @@
             } else {
                 // Use provided prizeId or fallback to currentPrizeId
                 const finalPrizeId = prizeId || currentPrizeId;
+                if (!finalPrizeId) {
+                    console.warn('[handleEntryPurchase] No prizeId available');
+                    showMessage('Unable to process purchase. Please try again.');
+                    return;
+                }
                 openCheckoutModal(itemName, itemPrice, selectedEntryOption, true, finalPrizeId);
             }
         }
@@ -2012,6 +2024,13 @@
         }
 
         function openCheckoutModal(itemName, itemPrice, quantity, isEntries, itemId) {
+            // Ensure modal is closed first to reset any state
+            const modalEl = document.getElementById('checkout-modal');
+            if (modalEl) {
+                modalEl.classList.add('is-hidden');
+                modalEl.classList.remove('is-visible');
+            }
+            
             // Reset form first to ensure clean state
             resetCheckoutForm();
             
@@ -2027,9 +2046,16 @@
 
             // Load saved billing info (this will populate fields after reset)
             loadSavedBillingInfo();
-            document.getElementById('checkout-order-title').textContent = itemName;
+            
+            // Update order details
+            const orderTitleEl = document.getElementById('checkout-order-title');
+            if (orderTitleEl) orderTitleEl.textContent = itemName;
+            
             const priceLabel = isEntries ? `per entry` : `per donation`;
-            document.getElementById('checkout-order-price').innerHTML = `$${(checkoutState.itemPrice).toLocaleString()} <span class="text-xs text-gray-500">${priceLabel}</span>`;
+            const orderPriceEl = document.getElementById('checkout-order-price');
+            if (orderPriceEl) {
+                orderPriceEl.innerHTML = `$${(checkoutState.itemPrice).toLocaleString()} <span class="text-xs text-gray-500">${priceLabel}</span>`;
+            }
 
             const typeLabel = document.getElementById('checkout-order-type-label');
             const quantityLabel = document.getElementById('checkout-quantity-label');
@@ -2043,8 +2069,20 @@
 
             updateCheckoutTotals();
             renderPaymentProviders();
-            const el = document.getElementById('checkout-modal');
-            if (el) { el.classList.remove('is-hidden'); el.classList.add('is-visible'); }
+            
+            // Ensure modal is opened - use setTimeout to ensure DOM is ready
+            setTimeout(() => {
+                const el = document.getElementById('checkout-modal');
+                if (el) {
+                    el.classList.remove('is-hidden');
+                    el.classList.add('is-visible');
+                    // Force a reflow to ensure visibility
+                    el.offsetHeight;
+                } else {
+                    console.error('[Checkout] Modal element not found!');
+                }
+            }, 10);
+            
             lucide.createIcons();
         }
 
@@ -2122,7 +2160,10 @@
 
         function closeCheckoutModal() {
             const el = document.getElementById('checkout-modal');
-            if (el) { el.classList.add('is-hidden'); el.classList.remove('is-visible'); }
+            if (el) {
+                el.classList.add('is-hidden');
+                el.classList.remove('is-visible');
+            }
             
             // Reset checkout state and form when closing
             checkoutState = {

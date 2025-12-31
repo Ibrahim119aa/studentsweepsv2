@@ -194,6 +194,47 @@ window.SocketClient = (function() {
 
   // Setup all socket event listeners
   function setupSocketListeners() {
+    // Remove existing listeners first to prevent duplicates
+    if (socket) {
+      socket.removeAllListeners('connect');
+      socket.removeAllListeners('disconnect');
+      socket.removeAllListeners('connect_error');
+      socket.removeAllListeners('error');
+      socket.removeAllListeners('connection:ready');
+      socket.removeAllListeners('auth:login:success');
+      socket.removeAllListeners('auth:signup:success');
+      socket.removeAllListeners('auth:status:response');
+      socket.removeAllListeners('user:update:response');
+      socket.removeAllListeners('user:updated');
+      socket.removeAllListeners('prizes:list:response');
+      socket.removeAllListeners('donations:list:response');
+      socket.removeAllListeners('donations:new');
+      socket.removeAllListeners('donations:update');
+      socket.removeAllListeners('donations:delete');
+      socket.removeAllListeners('draw:history:response');
+      socket.removeAllListeners('winners:list:response');
+      socket.removeAllListeners('winners:all:response');
+      socket.removeAllListeners('winner:assigned');
+      socket.removeAllListeners('winner:updated');
+      socket.removeAllListeners('winner:deleted');
+      socket.removeAllListeners('entries:myTransactions:response');
+      socket.removeAllListeners('paymentOptions:list:response');
+      socket.removeAllListeners('paymentOptions:new');
+      socket.removeAllListeners('paymentOptions:update');
+      socket.removeAllListeners('paymentOptions:enabledChanged');
+      socket.removeAllListeners('settings:get:response');
+      socket.removeAllListeners('settings:update');
+      socket.removeAllListeners('entries:purchase:invoice');
+      socket.removeAllListeners('entries:purchase:created');
+      socket.removeAllListeners('donation:purchase:invoice');
+      socket.removeAllListeners('donation:purchase:created');
+      socket.removeAllListeners('donation:purchase:error');
+      socket.removeAllListeners('payments:paid');
+      socket.removeAllListeners('newsletter:subscribe:response');
+      socket.removeAllListeners('draw:result');
+      socket.removeAllListeners('message:notify');
+    }
+    
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('connect_error', onConnectError);
@@ -260,6 +301,22 @@ window.SocketClient = (function() {
     console.log('✅ [SocketClient] Transport:', socket.io.engine.transport.name);
     console.log('✅ [SocketClient] Connection status: CONNECTED ✓');
     console.log('✅ [SocketClient] ========================================');
+    
+    // Re-register purchase event listeners on reconnect to ensure they're active
+    // (Other listeners should persist, but purchase listeners are critical)
+    if (socket) {
+      socket.removeAllListeners('entries:purchase:invoice');
+      socket.removeAllListeners('entries:purchase:created');
+      socket.removeAllListeners('donation:purchase:invoice');
+      socket.removeAllListeners('donation:purchase:created');
+      socket.removeAllListeners('donation:purchase:error');
+      socket.on('entries:purchase:invoice', onEntryPurchaseInvoice);
+      socket.on('entries:purchase:created', onEntryPurchaseCreated);
+      socket.on('donation:purchase:invoice', onDonationPurchaseInvoice);
+      socket.on('donation:purchase:created', onDonationPurchaseCreated);
+      socket.on('donation:purchase:error', onDonationPurchaseError);
+      console.log('[SocketClient] Re-registered purchase event listeners on reconnect');
+    }
     
     // Enable reconnection now that initial connection is successful
     if (socket && socket.io) {
@@ -665,18 +722,23 @@ window.SocketClient = (function() {
   }
 
   function onEntryPurchaseInvoice(data) {
+    console.log('[SocketClient] ========================================');
+    console.log('[SocketClient] Entry purchase invoice event received');
+    console.log('[SocketClient] Full data:', JSON.stringify(data, null, 2));
+    console.log('[SocketClient] ========================================');
+    
     if (!data) {
       console.warn('[SocketClient] Entry purchase invoice received with no data');
+      if (window.showMessage) window.showMessage('Payment link not available. Please contact support.', 'error');
       return;
     }
-    console.log('[SocketClient] Entry purchase invoice received:', JSON.stringify(data).substring(0, 500));
     
     // For Malum, the URL is in data.invoice.url; for NowPayments, the URL is in data.invoice.invoice_url
     let url = null;
     if (data.invoice) {
       if (typeof data.invoice === 'object') {
         url = extractInvoiceUrl(data.invoice);
-        console.log('[SocketClient] Extracted invoice URL:', url);
+        console.log('[SocketClient] Extracted invoice URL from object:', url);
       } else if (typeof data.invoice === 'string') {
         // Sometimes invoice might be a direct URL string
         url = data.invoice;
@@ -691,11 +753,20 @@ window.SocketClient = (function() {
     }
     
     if (url && url.trim() !== '') {
-      console.log('[SocketClient] Redirecting to payment URL:', url);
-      window.location.href = url;
+      console.log('[SocketClient] ✅ Redirecting to payment URL:', url);
       if (window.showMessage) window.showMessage('Redirecting to payment...', 'success');
+      // Use setTimeout to ensure message is shown before redirect
+      setTimeout(() => {
+        window.location.href = url;
+      }, 100);
     } else {
-      console.error('[SocketClient] No invoice URL found in entry purchase response. Full data:', JSON.stringify(data));
+      console.error('[SocketClient] ❌ No invoice URL found in entry purchase response');
+      console.error('[SocketClient] Data structure:', {
+        hasInvoice: !!data.invoice,
+        invoiceType: typeof data.invoice,
+        hasUrl: !!data.url,
+        fullData: data
+      });
       if (window.showMessage) window.showMessage('Payment link not available. Please contact support.', 'error');
     }
   }
@@ -713,18 +784,23 @@ window.SocketClient = (function() {
   }
 
   function onDonationPurchaseInvoice(data) {
+    console.log('[SocketClient] ========================================');
+    console.log('[SocketClient] Donation purchase invoice event received');
+    console.log('[SocketClient] Full data:', JSON.stringify(data, null, 2));
+    console.log('[SocketClient] ========================================');
+    
     if (!data) {
       console.warn('[SocketClient] Donation purchase invoice received with no data');
+      if (window.showMessage) window.showMessage('Payment link not available. Please contact support.', 'error');
       return;
     }
-    console.log('[SocketClient] Donation purchase invoice received:', JSON.stringify(data).substring(0, 500));
     
     // For Malum, the URL is in data.invoice.url; for NowPayments, the URL is in data.invoice.invoice_url
     let url = null;
     if (data.invoice) {
       if (typeof data.invoice === 'object') {
         url = extractInvoiceUrl(data.invoice);
-        console.log('[SocketClient] Extracted donation invoice URL:', url);
+        console.log('[SocketClient] Extracted donation invoice URL from object:', url);
       } else if (typeof data.invoice === 'string') {
         url = data.invoice;
         console.log('[SocketClient] Donation invoice is direct URL string:', url);
@@ -738,11 +814,20 @@ window.SocketClient = (function() {
     }
     
     if (url && url.trim() !== '') {
-      console.log('[SocketClient] Redirecting to donation payment URL:', url);
-      window.location.href = url;
+      console.log('[SocketClient] ✅ Redirecting to donation payment URL:', url);
       if (window.showMessage) window.showMessage('Redirecting to payment...', 'success');
+      // Use setTimeout to ensure message is shown before redirect
+      setTimeout(() => {
+        window.location.href = url;
+      }, 100);
     } else {
-      console.error('[SocketClient] No invoice URL found in donation purchase response. Full data:', JSON.stringify(data));
+      console.error('[SocketClient] ❌ No invoice URL found in donation purchase response');
+      console.error('[SocketClient] Data structure:', {
+        hasInvoice: !!data.invoice,
+        invoiceType: typeof data.invoice,
+        hasUrl: !!data.url,
+        fullData: data
+      });
       if (window.showMessage) window.showMessage('Payment link not available. Please contact support.', 'error');
     }
   }
