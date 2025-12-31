@@ -925,6 +925,20 @@ window.SocketClient = (function() {
         console.log('[SocketClient] Cleared pending invoice timeout');
       }
       
+      // Clear processing flag
+      if (window.isProcessingPayment) {
+        window.isProcessingPayment = false;
+        console.log('[SocketClient] Cleared payment processing flag');
+      }
+      
+      // Re-enable checkout button
+      const checkoutButton = document.querySelector('button[onclick*="finalizeCheckout"]');
+      if (checkoutButton) {
+        checkoutButton.disabled = false;
+        checkoutButton.style.opacity = '1';
+        checkoutButton.style.cursor = 'pointer';
+      }
+      
       // Close checkout modal if it's open
       if (typeof window.closeCheckoutModal === 'function') {
         window.closeCheckoutModal();
@@ -1001,6 +1015,20 @@ window.SocketClient = (function() {
       if (window.pendingInvoiceTimeout) {
         clearTimeout(window.pendingInvoiceTimeout);
         window.pendingInvoiceTimeout = null;
+      }
+      
+      // Clear processing flag
+      if (window.isProcessingPayment) {
+        window.isProcessingPayment = false;
+        console.log('[SocketClient] Cleared payment processing flag (donation)');
+      }
+      
+      // Re-enable checkout button
+      const checkoutButton = document.querySelector('button[onclick*="finalizeCheckout"]');
+      if (checkoutButton) {
+        checkoutButton.disabled = false;
+        checkoutButton.style.opacity = '1';
+        checkoutButton.style.cursor = 'pointer';
       }
       
       // Close checkout modal if it's open

@@ -2157,6 +2157,28 @@
                 el.classList.remove('is-visible');
             }
             
+            // Clear processing flag when modal closes
+            if (window.isProcessingPayment) {
+                window.isProcessingPayment = false;
+                console.log('[Checkout] Cleared payment processing flag (modal closed)');
+            }
+            
+            // Clear any pending timeout
+            if (window.pendingInvoiceTimeout) {
+                clearTimeout(window.pendingInvoiceTimeout);
+                window.pendingInvoiceTimeout = null;
+            }
+            
+            // Re-enable checkout button
+            const checkoutButton = document.querySelector('button[onclick*="finalizeCheckout"]');
+            if (checkoutButton) {
+                checkoutButton.disabled = false;
+                checkoutButton.style.opacity = '1';
+                checkoutButton.style.cursor = 'pointer';
+                const amountEl = document.getElementById('checkout-confirm-amount');
+                checkoutButton.innerHTML = `<span class="mr-1">Confirm Purchase & Pay</span> <span id="checkout-confirm-amount">${amountEl ? amountEl.textContent : '$0.00'}</span>`;
+            }
+            
             // Reset checkout state and form when closing
             checkoutState = {
                 itemName: null,
@@ -2180,8 +2202,17 @@
         }
 
         function finalizeCheckout() {
+            // Prevent multiple payment attempts
+            if (window.isProcessingPayment) {
+                console.log('[Checkout] Payment already processing, ignoring duplicate request');
+                return;
+            }
+            
             if (!window.SocketClient) { showMessage('Unable to connect'); return; }
             if (!isLoggedIn || !currentUser) { showMessage('Please sign in'); openAuthModal(); return; }
+            
+            // Set processing flag
+            window.isProcessingPayment = true;
 
             const billingFullName = document.getElementById('billing-fullname')?.value?.trim();
             const billingEmail = document.getElementById('billing-email')?.value?.trim();
@@ -2240,6 +2271,15 @@
             
             console.log('[Checkout] Socket connection verified. Socket ID:', socketInstance?.id, 'Connected:', socketInstance?.connected);
 
+            // Disable checkout button to prevent multiple clicks
+            const checkoutButton = document.querySelector('button[onclick*="finalizeCheckout"]');
+            if (checkoutButton) {
+                checkoutButton.disabled = true;
+                checkoutButton.style.opacity = '0.6';
+                checkoutButton.style.cursor = 'not-allowed';
+                checkoutButton.textContent = 'Processing...';
+            }
+            
             showMessage('Processing payment...');
             try {
                 // Store checkout state values before clearing
@@ -2425,14 +2465,16 @@
                             window.location.href = foundInvoiceUrl;
                         }, 100);
                     } else {
-                        closeCheckoutModal();
-                        showMessage('Payment processing is taking longer than expected. Please check your transactions page. If payment was processed, you will see it there.', 'warning');
+                        // Don't show timeout message - just keep waiting silently
+                        // The invoice will come eventually or user can check transactions manually
+                        console.log('[Checkout] No invoice URL found in transactions. Continuing to wait for socket event...');
+                        // Keep modal open and continue waiting - don't show error message
                     }
-                }, 15000); // Increased to 15 seconds
+                }, 30000); // Increased to 30 seconds to give more time
                 
                 // Store timeout ID so we can clear it when invoice is received
                 window.pendingInvoiceTimeout = invoiceTimeout;
-                console.log('[Checkout] ⏱️ Invoice timeout set for 15 seconds');
+                console.log('[Checkout] ⏱️ Invoice timeout set for 30 seconds');
                 
                 // Clear checkout state after emitting (but keep modal open until redirect)
                 checkoutState = {
