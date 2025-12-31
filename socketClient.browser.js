@@ -56,14 +56,25 @@ window.SocketClient = (function() {
 
   // Event emitter with retry logic
   function emit(event, data = {}) {
-    if (!socket || !isConnected) {
-      console.warn(`[SocketClient] Not connected. Queueing emit: ${event}`);
+    if (!socket) {
+      console.error(`[SocketClient] Socket not initialized. Cannot emit: ${event}`);
+      return false;
+    }
+    
+    if (!isConnected || !socket.connected) {
+      console.warn(`[SocketClient] Not connected. Socket connected: ${socket.connected}, isConnected: ${isConnected}. Queueing emit: ${event}`);
       pendingEmits.push({ event, data });
       return false;
     }
+    
     console.log(`[SocketClient] Emitting: ${event}`, data);
-    socket.emit(event, data);
-    return true;
+    try {
+      socket.emit(event, data);
+      return true;
+    } catch (err) {
+      console.error(`[SocketClient] Error emitting ${event}:`, err);
+      return false;
+    }
   }
   
   // Process pending emits after connect
@@ -754,6 +765,18 @@ window.SocketClient = (function() {
     
     if (url && url.trim() !== '') {
       console.log('[SocketClient] ✅ Redirecting to payment URL:', url);
+      
+      // Clear any pending invoice timeout
+      if (window.pendingInvoiceTimeout) {
+        clearTimeout(window.pendingInvoiceTimeout);
+        window.pendingInvoiceTimeout = null;
+      }
+      
+      // Close checkout modal if it's open
+      if (typeof window.closeCheckoutModal === 'function') {
+        window.closeCheckoutModal();
+      }
+      
       if (window.showMessage) window.showMessage('Redirecting to payment...', 'success');
       // Use setTimeout to ensure message is shown before redirect
       setTimeout(() => {
@@ -815,6 +838,18 @@ window.SocketClient = (function() {
     
     if (url && url.trim() !== '') {
       console.log('[SocketClient] ✅ Redirecting to donation payment URL:', url);
+      
+      // Clear any pending invoice timeout
+      if (window.pendingInvoiceTimeout) {
+        clearTimeout(window.pendingInvoiceTimeout);
+        window.pendingInvoiceTimeout = null;
+      }
+      
+      // Close checkout modal if it's open
+      if (typeof window.closeCheckoutModal === 'function') {
+        window.closeCheckoutModal();
+      }
+      
       if (window.showMessage) window.showMessage('Redirecting to payment...', 'success');
       // Use setTimeout to ensure message is shown before redirect
       setTimeout(() => {

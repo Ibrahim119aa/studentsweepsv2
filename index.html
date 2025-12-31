@@ -2222,6 +2222,13 @@
             const provider = document.querySelector('input[name="checkout-provider"]:checked')?.value || 'malum';
             const subtotal = checkoutState.itemPrice * checkoutState.quantity;
 
+            // Verify socket connection before proceeding
+            if (!window.SocketClient || !window.SocketClient.isConnected || !window.SocketClient.isConnected()) {
+                showMessage('Connection lost. Please refresh the page and try again.', 'error');
+                console.error('[Checkout] Socket not connected');
+                return;
+            }
+
             showMessage('Processing payment...');
             try {
                 // Store checkout state values before clearing
@@ -2229,6 +2236,8 @@
                 const prizeId = checkoutState.prizeId;
                 const donationId = checkoutState.donationId;
                 const quantity = checkoutState.quantity;
+                
+                console.log('[Checkout] Emitting purchase event:', { isEntries, prizeId, donationId, quantity, provider });
                 
                 if (isEntries) {
                     const payload = {
@@ -2241,7 +2250,8 @@
                             emailAddress: currentUser.emailAddress
                         }
                     };
-                    window.SocketClient.emit('entries:purchase', payload);
+                    const emitResult = window.SocketClient.emit('entries:purchase', payload);
+                    console.log('[Checkout] Entries purchase emit result:', emitResult);
 
                     // Store prize ID and entry amount for real-time update
                     if (prizeId) {
@@ -2260,10 +2270,23 @@
                             emailAddress: currentUser.emailAddress
                         }
                     };
-                    window.SocketClient.emit('donation:purchase', payload);
+                    const emitResult = window.SocketClient.emit('donation:purchase', payload);
+                    console.log('[Checkout] Donation purchase emit result:', emitResult);
                 }
                 
-                // Clear checkout state immediately after emitting to prevent repurchase issues
+                // Don't close modal immediately - wait for invoice response
+                // The modal will be closed when we receive the invoice URL and redirect
+                // But set a timeout to close it if no response comes
+                const invoiceTimeout = setTimeout(() => {
+                    console.warn('[Checkout] No invoice response received after 10 seconds');
+                    closeCheckoutModal();
+                    showMessage('Payment processing is taking longer than expected. Please check your transactions.', 'warning');
+                }, 10000);
+                
+                // Store timeout ID so we can clear it when invoice is received
+                window.pendingInvoiceTimeout = invoiceTimeout;
+                
+                // Clear checkout state after emitting (but keep modal open until redirect)
                 checkoutState = {
                     itemName: null,
                     itemPrice: 0,
@@ -2272,11 +2295,10 @@
                     prizeId: null,
                     donationId: null
                 };
-                
-                closeCheckoutModal();
             } catch (e) {
-                console.warn('purchase failed', e);
-                showMessage('Failed to process');
+                console.error('[Checkout] Purchase failed:', e);
+                showMessage('Failed to process payment. Please try again.', 'error');
+                closeCheckoutModal();
             }
         }
 
