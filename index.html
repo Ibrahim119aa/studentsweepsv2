@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sweepstackz Platform - Entries & Prizes</title>
+    <title>Studentsweeps Platform - Entries & Prizes</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -397,7 +397,7 @@
     <div id="loading-screen">
         <div class="text-center">
             <div class="loader mb-4"></div>
-            <p class="text-lg font-semibold text-gray-700">Loading Sweepstackz...</p>
+            <p class="text-lg font-semibold text-gray-700">Loading Studentsweeps...</p>
         </div>
     </div>
 
@@ -411,7 +411,7 @@
 
             <!-- Logo --><a href="#" class="text-2xl font-extrabold tracking-wider text-gray-900 flex-shrink-0"
                 onclick="changePage('home', null, event)">
-                Sweepstackz<span class="text-accent">.</span>
+                Studentsweeps<span class="text-accent">.</span>
             </a>
 
             <!-- Desktop Navigation -->
@@ -475,7 +475,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 text-gray-500">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-8 border-b border-gray-300 pb-8 mb-8">
                 <div>
-                    <h3 class="text-xl font-extrabold tracking-wider text-gray-900 mb-4">Sweepstackz<span
+                    <h3 class="text-xl font-extrabold tracking-wider text-gray-900 mb-4">Studentsweeps<span
                             class="text-accent">.</span></h3>
                     <p class="text-sm">We give away epic prizes and support great causes. Join the excitement!</p>
                 </div>
@@ -516,7 +516,7 @@
                 </div>
             </div>
             <div class="text-center text-sm text-gray-500">
-                &copy; 2025 Sweepstackz. All rights reserved. | <a href="#" class="hover:text-accent">Terms &
+                &copy; 2025 Studentsweeps. All rights reserved. | <a href="#" class="hover:text-accent">Terms &
                     Conditions</a> | <a href="#" class="hover:text-accent">Privacy Policy</a>
             </div>
         </div>
@@ -545,7 +545,7 @@
                     data-lucide="x" class="w-6 h-6"></i></button>
             <div id="login-view">
                 <h2 class="text-3xl font-bold text-center text-gray-900">Welcome Back!</h2>
-                <p class="text-center text-gray-500 mt-2">Sign in to continue to Sweepstackz.</p>
+                <p class="text-center text-gray-500 mt-2">Sign in to continue to Studentsweeps.</p>
                 <form onsubmit="handleLogin(event)" class="mt-8 space-y-6">
                     <div><input id="login-email" type="email" autocomplete="email" required
                             class="w-full p-3 rounded-lg bg-gray-100" placeholder="Email address"></div>
@@ -734,7 +734,7 @@
                                 <p id="checkout-order-type-label" class="text-xs text-gray-500">Winning Prize:</p>
                                 <div class="flex justify-between items-center">
                                     <span id="checkout-order-title" class="font-bold text-gray-800"></span>
-                                    <span id="checkout-order-price" class="font-bold text-accent">£0.00 <span
+                                    <span id="checkout-order-price" class="font-bold text-accent">$0.00 <span
                                             class="text-xs text-gray-500 font-normal">per entry</span></span>
                                 </div>
                             </div>
@@ -748,14 +748,14 @@
                             <!-- Subtotal -->
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Subtotal:</span>
-                                <span id="checkout-order-subtotal" class="font-medium">£0.00</span>
+                                <span id="checkout-order-subtotal" class="font-medium">$0.00</span>
                             </div>
 
                             <!-- Total Due -->
                             <div class="pt-4 border-t border-gray-300">
                                 <div class="flex justify-between items-center text-3xl font-extrabold">
                                     <span class="text-gray-900">Total Due:</span>
-                                    <span id="checkout-order-total" class="text-accent">£0.00</span>
+                                    <span id="checkout-order-total" class="text-accent">$0.00</span>
                                 </div>
                                 <p class="text-[10px] text-gray-500 mt-1 text-right">(External provider fees may apply
                                     after selection)</p>
@@ -769,7 +769,7 @@
             <div class="p-6 border-t border-gray-200 text-center">
                 <button onclick="finalizeCheckout()"
                     class="w-full bg-accent hover:bg-accent-dark text-white font-extrabold py-3 px-6 rounded-lg transition duration-200 shadow-lg flex items-center justify-center">
-                    <span class="mr-1">Confirm Purchase & Pay</span> <span id="checkout-confirm-amount">£0.00</span>
+                    <span class="mr-1">Confirm Purchase & Pay</span> <span id="checkout-confirm-amount">$0.00</span>
                 </button>
                 <!-- Enhanced Security Message -->
                 <p class="text-xs text-gray-500 mt-2 flex items-center justify-center font-medium">
@@ -929,15 +929,20 @@
                 }
                 return true; // Include prizes without drawTimestamp
             });
-            const featuredPrizes = activePrizes.slice(0, 3).map(p => `
+            const featuredPrizes = activePrizes.slice(0, 3).map(p => {
+                // Truncate short description to max 100 characters for listing display
+                const shortDesc = p.shortDescription || '';
+                const truncatedDesc = shortDesc.length > 100 ? shortDesc.substring(0, 100) + '...' : shortDesc;
+                return `
     <div onclick="changePage('detail', '${p._id}', event)" class="bg-white rounded-xl overflow-hidden shadow-lg card-bg cursor-pointer hover:shadow-lg transition duration-300">
         <img src="${p.thumbnail || FALLBACK_IMAGE}" alt="${p.name}" class="w-full h-52 object-cover" onerror="this.src='${FALLBACK_IMAGE}'" />
         <div class="p-4 space-y-1">
             <h4 class="text-lg font-bold">${p.name}</h4>
-            <p class="text-xs text-gray-500">${p.shortDescription}</p>
+            <p class="text-xs text-gray-500">${truncatedDesc}</p>
         </div>
     </div>
-`).join('') || '<p class="text-gray-500 col-span-full text-center py-8">No prizes available at the moment.</p>';
+`;
+            }).join('') || '<p class="text-gray-500 col-span-full text-center py-8">No prizes available at the moment.</p>';
 
             const donationTiles = (window.DONATIONS || []).slice(0, 3).filter(d => d && d._id && d.name).map(d => {
                 const donationImage = d.image || '';
@@ -961,8 +966,13 @@
             const allPastPrizes = [...(window.PAST_PRIZES || []), ...drawnPrizes].filter((p, index, self) =>
                 index === self.findIndex(prize => String(prize._id) === String(p._id))
             );
-            const pastPrizes = allPastPrizes.slice(0, 3).map(p => ` <div onclick="changePage('detail', '${p._id}', event)" class="relative rounded-xl overflow-hidden shadow-lg card-bg cursor-pointer hover:shadow-xl transition duration-300"> <div class="absolute top-2 right-2 bg-gray-500 text-white text-xs px-2 py-0.5 rounded-full font-bold z-10">DRAWN</div> <img src="${p.thumbnail || FALLBACK_IMAGE}" alt="${p.name}" class="w-full h-52 object-cover block" onerror="this.src='${FALLBACK_IMAGE}'" /> <div class="p-3"> <p class="text-sm font-semibold">${p.name}</p> <p class="text-xs text-gray-400">${p.shortDescription}</p> </div> </div> `).join('');
-            const html = ` <div class="relative rounded-xl overflow-hidden shadow-xl h-64 sm:h-80 md:h-[400px] mb-12 border"><img src="https://placehold.co/1200x600/5c378e/ffffff?text=Make+Magic+Happen" alt="Hero Image" class="w-full h-full object-cover" /><div class="absolute inset-0 bg-black bg-opacity-40 flex items-center p-6 sm:p-10 md:p-16"><div class="max-w-xs sm:max-w-md space-y-4"><h1 class="text-3xl sm:text-4xl md:text-6xl font-extrabold text-white">Make magic happen.</h1><p class="text-sm sm:text-lg text-gray-100">We giveaway epic prizes, and support great causes.</p><button onclick="changePage('prizes', null, event)" class="bg-accent hover:bg-accent-dark text-white font-extrabold py-3 px-8 rounded-lg">View Prizes</button></div></div></div><div class="bg-white rounded-lg shadow-md overflow-hidden flex text-center font-semibold mb-8"><div class="flex-1 text-white bg-accent py-3 cursor-pointer">Featured Prizes</div><div class="flex-1 hover:bg-gray-100 py-3 cursor-pointer" onclick="changePage('donations',null,event)">Donations</div><div class="flex-1 hover:bg-gray-100 py-3 cursor-pointer" onclick="changePage('winners',null,event)">Winners</div></div><section class="mb-12"><h2 class="text-2xl font-bold mb-6 border-b pb-2">Featured Prizes</h2><div class="grid sm:grid-cols-2 md:grid-cols-3 gap-6">${featuredPrizes || '<p class="text-gray-500 col-span-full text-center py-8">Loading prizes...</p>'}</div><div class="text-center mt-6"><button onclick="changePage('prizes',null,event)" class="text-accent font-semibold flex items-center justify-center mx-auto">View All <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i></button></div></section><section class="mb-12"><h2 class="text-2xl font-bold mb-6 border-b pb-2">Featured Donations</h2><div class="grid sm:grid-cols-2 md:grid-cols-3 gap-6">${donationTiles || '<p class="text-gray-500 col-span-full text-center py-8">Loading causes...</p>'}</div><div class="text-center mt-6"><button onclick="changePage('donations',null,event)" class="text-accent font-semibold flex items-center justify-center mx-auto">View All <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i></button></div></section><section class="mb-12"><h2 class="text-2xl font-bold mb-6 border-b pb-2">Past Prizes</h2><div class="grid grid-cols-2 md:grid-cols-4 gap-6">${pastPrizes || '<p class="text-gray-500 col-span-full text-center py-8">No past prizes yet</p>'}</div><div class="text-center mt-6"><button onclick="changePage('prizes',null,event)" class="text-accent font-semibold flex items-center justify-center mx-auto">View All <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i></button></div></section>`;
+            const pastPrizes = allPastPrizes.slice(0, 3).map(p => {
+                // Truncate short description to max 80 characters for past prizes display
+                const shortDesc = p.shortDescription || '';
+                const truncatedDesc = shortDesc.length > 80 ? shortDesc.substring(0, 80) + '...' : shortDesc;
+                return ` <div onclick="changePage('detail', '${p._id}', event)" class="relative rounded-xl overflow-hidden shadow-lg card-bg cursor-pointer hover:shadow-xl transition duration-300"> <div class="absolute top-2 right-2 bg-gray-500 text-white text-xs px-2 py-0.5 rounded-full font-bold z-10">DRAWN</div> <img src="${p.thumbnail || FALLBACK_IMAGE}" alt="${p.name}" class="w-full h-52 object-cover block" onerror="this.src='${FALLBACK_IMAGE}'" /> <div class="p-3"> <p class="text-sm font-semibold">${p.name}</p> <p class="text-xs text-gray-400">${truncatedDesc}</p> </div> </div> `;
+            }).join('');
+            const html = ` <div class="relative rounded-xl overflow-hidden shadow-xl h-64 sm:h-80 md:h-[400px] mb-12 border"><img src="https://placehold.co/1200x600/5c378e/ffffff?text=Make+Magic+Happen" alt="Hero Image" class="w-full h-full object-cover" /><div class="absolute inset-0 bg-black bg-opacity-40 flex items-center p-6 sm:p-10 md:p-16"><div class="max-w-xs sm:max-w-md space-y-4"><h1 class="text-3xl sm:text-4xl md:text-6xl font-extrabold text-white">Turning student dreams into wins.</h1><p class="text-sm sm:text-lg text-gray-100">We giveaway epic prizes, and support great causes.</p><button onclick="changePage('prizes', null, event)" class="bg-accent hover:bg-accent-dark text-white font-extrabold py-3 px-8 rounded-lg">View Prizes</button></div></div></div><div class="bg-white rounded-lg shadow-md overflow-hidden flex text-center font-semibold mb-8"><div class="flex-1 text-white bg-accent py-3 cursor-pointer">Featured Prizes</div><div class="flex-1 hover:bg-gray-100 py-3 cursor-pointer" onclick="changePage('donations',null,event)">Donations</div><div class="flex-1 hover:bg-gray-100 py-3 cursor-pointer" onclick="changePage('winners',null,event)">Winners</div></div><section class="mb-12"><h2 class="text-2xl font-bold mb-6 border-b pb-2">Featured Prizes</h2><div class="grid sm:grid-cols-2 md:grid-cols-3 gap-6">${featuredPrizes || '<p class="text-gray-500 col-span-full text-center py-8">Loading prizes...</p>'}</div><div class="text-center mt-6"><button onclick="changePage('prizes',null,event)" class="text-accent font-semibold flex items-center justify-center mx-auto">View All <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i></button></div></section><section class="mb-12"><h2 class="text-2xl font-bold mb-6 border-b pb-2">Featured Donations</h2><div class="grid sm:grid-cols-2 md:grid-cols-3 gap-6">${donationTiles || '<p class="text-gray-500 col-span-full text-center py-8">Loading causes...</p>'}</div><div class="text-center mt-6"><button onclick="changePage('donations',null,event)" class="text-accent font-semibold flex items-center justify-center mx-auto">View All <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i></button></div></section><section class="mb-12"><h2 class="text-2xl font-bold mb-6 border-b pb-2">Past Prizes</h2><div class="grid grid-cols-2 md:grid-cols-4 gap-6">${pastPrizes || '<p class="text-gray-500 col-span-full text-center py-8">No past prizes yet</p>'}</div><div class="text-center mt-6"><button onclick="changePage('prizes',null,event)" class="text-accent font-semibold flex items-center justify-center mx-auto">View All <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i></button></div></section>`;
             mainContentEl.innerHTML = html;
             lucide.createIcons();
         }
@@ -1103,7 +1113,24 @@
                 previewImagesCount: (prize.previewImages || []).length,
                 specsCount: (prize.detailsSpecs || []).length
             });
-            const html = `<div class="space-y-12"><div class="pb-2"><h1 class="text-5xl font-extrabold">${prize.name}</h1><p class="text-xl text-gray-500 mt-1">${prize.shortDescription || ''}</p>${isPastPrize ? '<div class="mt-2 text-red-500 font-bold">This draw has closed.</div>' : ''}</div><div class="grid lg:grid-cols-12 gap-10"><div class="lg:col-span-7 space-y-8"><div class="rounded-xl overflow-hidden shadow-lg border"><img id="main-prize-image" src="${mainImage}" alt="${prize.name}" class="w-full h-96 object-cover" onerror="this.src='${FALLBACK_IMAGE}'" /></div><div class="grid grid-cols-6 gap-2">${previewImagesHtml || '<div class="text-gray-400">No preview images</div>'}</div><div class="grid md:grid-cols-2 gap-8 pt-4"><div><h3 class="text-2xl font-bold border-b pb-2">Details & Specs</h3><ul>${specList || '<li class="text-gray-500">No specs available</li>'}</ul><p class="text-sm text-gray-600 mt-4">${prize.detailedDescription || ''}</p></div></div></div><div class="lg:col-span-5 space-y-6"><div class="bg-white p-6 rounded-xl shadow-md border space-y-4 ${isPastPrize ? 'opacity-50' : ''}"><div id="draw-message" class="flex justify-center items-center"></div><div id="countdown-timer" class="grid grid-cols-4 gap-2 text-center">${['days', 'hours', 'minutes', 'seconds'].map((l, i) => `<div id="${l}-unit" class="flex flex-col items-center digit-card"><div class="w-full aspect-[2/1] relative digit-card-inner"><div class="digit-card-face front-face text-xl font-bold" data-value="00">00</div><div class="digit-card-face back-face text-xl font-bold" data-value="00">00</div></div><span class="mt-1 text-xs uppercase">${['Days', 'Hrs', 'Min', 'Sec'][i]}</span></div>`).join('')}</div><div class="mt-4"><div class="w-full bg-gray-200 rounded-full h-3"><div id="prize-progress-bar" class="bg-accent h-3 rounded-full transition-all duration-500" style="width:${((prize.entries?.totalEntries || 0) / (prize.entries?.maxEntries || 1) * 100).toFixed(2)}%"></div></div><p class="text-xs text-center mt-2"><b id="prize-sold-entries">
+            // Build Details & Specs content - show detailedDescription as main content, specs as additional info
+            let detailsSpecsContent = '';
+            if (prize.detailedDescription && prize.detailedDescription.trim()) {
+                // If detailed description exists, show it as the main content
+                detailsSpecsContent = `<div class="text-gray-700 leading-relaxed">${prize.detailedDescription}</div>`;
+                // If there are also specs, show them below the description
+                if (specList) {
+                    detailsSpecsContent += `<div class="mt-6"><h4 class="text-lg font-semibold mb-3 text-gray-800">Specifications</h4><ul>${specList}</ul></div>`;
+                }
+            } else if (specList) {
+                // If no detailed description but there are specs, show specs
+                detailsSpecsContent = `<ul>${specList}</ul>`;
+            } else {
+                // If neither exists, show "No specs available"
+                detailsSpecsContent = '<p class="text-gray-500">No specs available</p>';
+            }
+            
+            const html = `<div class="space-y-12"><div class="pb-2"><h1 class="text-5xl font-extrabold">${prize.name}</h1><p class="text-xl text-gray-500 mt-1">${prize.shortDescription || ''}</p>${isPastPrize ? '<div class="mt-2 text-red-500 font-bold">This draw has closed.</div>' : ''}</div><div class="grid lg:grid-cols-12 gap-10"><div class="lg:col-span-7 space-y-8"><div class="rounded-xl overflow-hidden shadow-lg border"><img id="main-prize-image" src="${mainImage}" alt="${prize.name}" class="w-full h-96 object-cover" onerror="this.src='${FALLBACK_IMAGE}'" /></div><div class="grid grid-cols-6 gap-2">${previewImagesHtml || '<div class="text-gray-400">No preview images</div>'}</div><div class="grid md:grid-cols-2 gap-8 pt-4"><div><h3 class="text-2xl font-bold border-b pb-2">Details & Specs</h3>${detailsSpecsContent}</div></div></div><div class="lg:col-span-5 space-y-6"><div class="bg-white p-6 rounded-xl shadow-md border space-y-4 ${isPastPrize ? 'opacity-50' : ''}"><div id="draw-message" class="flex justify-center items-center"></div><div id="countdown-timer" class="grid grid-cols-4 gap-2 text-center">${['days', 'hours', 'minutes', 'seconds'].map((l, i) => `<div id="${l}-unit" class="flex flex-col items-center digit-card"><div class="w-full aspect-[2/1] relative digit-card-inner"><div class="digit-card-face front-face text-xl font-bold" data-value="00">00</div><div class="digit-card-face back-face text-xl font-bold" data-value="00">00</div></div><span class="mt-1 text-xs uppercase">${['Days', 'Hrs', 'Min', 'Sec'][i]}</span></div>`).join('')}</div><div class="mt-4"><div class="w-full bg-gray-200 rounded-full h-3"><div id="prize-progress-bar" class="bg-accent h-3 rounded-full transition-all duration-500" style="width:${((prize.entries?.totalEntries || 0) / (prize.entries?.maxEntries || 1) * 100).toFixed(2)}%"></div></div><p class="text-xs text-center mt-2"><b id="prize-sold-entries">
                 ${
                 //(prize.entries?.totalEntries || 0).toLocaleString()
                 (selectedEntryOption * entryPrice).toLocaleString()
@@ -1111,7 +1138,7 @@
                 
                 </b> 
                 of 
-                <span id="prize-max-entries">${(prize.entries?.maxEntries || 1).toLocaleString()}</span> sold</p></div></div>${!isPastPrize ? `<div class="space-y-4"><h3>Select Entries:</h3><div id="entry-options-container" class="grid grid-cols-5 gap-3">${entryButtons}</div><div class="p-3 bg-gray-100 rounded-lg flex justify-between items-center"><span class="font-semibold">Total:</span><span id="entry-total" class="text-3xl font-extrabold text-accent">£${(selectedEntryOption * entryPrice).toLocaleString()}</span></div><button type="button" onclick="handleEntryPurchase('${prize.name}', ${entryPrice}, false)" class="w-full bg-accent hover:bg-accent-dark text-white font-extrabold py-4 rounded-lg">ENTER NOW</button><p class="text-xs text-center flex items-center justify-center"><i data-lucide="lock" class="w-4 mr-1"></i>100% Secure Checkout</p></div>` : `<div class="p-6 bg-red-50 rounded-xl border border-red-300"><p class="text-center font-bold text-red-700">This sweepstake is closed.</p></div>`}</div></div></div>`;
+                <span id="prize-max-entries">${(prize.entries?.maxEntries || 1).toLocaleString()}</span> sold</p></div></div>${!isPastPrize ? `<div class="space-y-4"><h3>Select Entries:</h3><div id="entry-options-container" class="grid grid-cols-5 gap-3">${entryButtons}</div><div class="p-3 bg-gray-100 rounded-lg flex justify-between items-center"><span class="font-semibold">Total:</span><span id="entry-total" class="text-3xl font-extrabold text-accent">$${(selectedEntryOption * entryPrice).toLocaleString()}</span></div><button type="button" onclick="handleEntryPurchase('${prize.name}', ${entryPrice}, false)" class="w-full bg-accent hover:bg-accent-dark text-white font-extrabold py-4 rounded-lg">ENTER NOW</button><p class="text-xs text-center flex items-center justify-center"><i data-lucide="lock" class="w-4 mr-1"></i>100% Secure Checkout</p></div>` : `<div class="p-6 bg-red-50 rounded-xl border border-red-300"><p class="text-center font-bold text-red-700">This sweepstake is closed.</p></div>`}</div></div></div>`;
             mainContentEl.innerHTML = html;
 
             // Store current prize ID for real-time updates
@@ -1197,20 +1224,25 @@
             }
 
             const FALLBACK_IMAGE = 'https://placehold.co/300x200?text=No+Image';
-            const html = `<h1 class="text-4xl font-extrabold pb-8 border-b">All Prizes</h1><div class="grid grid-cols-2 md:grid-cols-4 gap-6 pt-8">${prizesList.map(p => `
+            const html = `<h1 class="text-4xl font-extrabold pb-8 border-b">All Prizes</h1><div class="grid grid-cols-2 md:grid-cols-4 gap-6 pt-8">${prizesList.map(p => {
+                // Truncate short description to max 100 characters for listing display
+                const shortDesc = p.shortDescription || '';
+                const truncatedDesc = shortDesc.length > 100 ? shortDesc.substring(0, 100) + '...' : shortDesc;
+                return `
                 <div onclick="changePage('detail', '${p._id}', event)" class="bg-white rounded-xl overflow-hidden shadow-lg card-bg cursor-pointer hover:shadow-lg transition duration-300 relative flex flex-col ${p.past ? 'opacity-70' : ''}">
                     ${p.past ? '<div class=\"absolute top-2 right-2 bg-gray-500 text-white text-xs px-2 py-0.5 rounded-full font-bold z-10\">CLOSED</div>' : ''}
                     <img src="${p.thumbnail || FALLBACK_IMAGE}" alt="${p.name}" class="w-full h-52 object-cover" onerror="this.src='${FALLBACK_IMAGE}'" />
                     <div class="p-4 flex-1 flex flex-col justify-between space-y-1">
                         <h4 class="text-lg font-bold">${p.name}</h4>
-                        <p class="text-xs text-gray-500">${p.shortDescription}</p>
+                        <p class="text-xs text-gray-500">${truncatedDesc}</p>
                         <div class="flex items-end justify-between pt-2">
-                            <span class="text-lg font-bold text-accent">£${(p.entries?.entryPrice || 0).toLocaleString()}</span>
+                            <span class="text-lg font-bold text-accent">$${(p.entries?.entryPrice || 0).toLocaleString()}</span>
                             <button class="text-sm font-semibold px-3 py-1 rounded-lg ${p.past ? 'bg-gray-200 text-gray-400 cursor-default opacity-50' : 'bg-accent text-white hover:bg-accent-dark'}">${p.past ? 'View' : 'Enter'}</button>
                         </div>
                     </div>
                 </div>
-            `).join('')}</div>`;
+            `;
+            }).join('')}</div>`;
             mainContentEl.innerHTML = html;
         }
         function renderWinnersPage() {
@@ -1445,7 +1477,7 @@
             });
 
             if (finalWinners.length === 0) {
-                mainContentEl.innerHTML = `<h1 class="text-4xl font-extrabold pb-8 border-b">Our Winners</h1><p class="text-gray-500 mb-8 max-w-2xl">Meet the people who have won big with Sweepstackz!</p><p class="text-center py-12 text-gray-400">No winners yet</p>`;
+                mainContentEl.innerHTML = `<h1 class="text-4xl font-extrabold pb-8 border-b">Our Winners</h1><p class="text-gray-500 mb-8 max-w-2xl">Meet the people who have won big with Studentsweeps!</p><p class="text-center py-12 text-gray-400">No winners yet</p>`;
                 return;
             }
 
@@ -1468,7 +1500,7 @@
 
             const html = `
                 <h1 class="text-4xl font-extrabold pb-8 border-b">Our Winners</h1>
-                <p class="text-gray-500 mb-8 max-w-2xl">Meet the people who have won big with Sweepstackz!</p>
+                <p class="text-gray-500 mb-8 max-w-2xl">Meet the people who have won big with Studentsweeps!</p>
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                     ${finalWinners.map((w, idx) => {
                 const initials = getInitials(w.winnerName);
@@ -1515,7 +1547,7 @@
             const html = `<h1 class="text-4xl font-extrabold pb-8 border-b">Charity & Donations</h1><p class="text-gray-500 mb-8 max-w-4xl">Your entries don't just win prizes, they change lives.</p><div class="grid sm:grid-cols-3 gap-6">${(window.DONATIONS || []).slice(0, 6).map(d => {
                 const donationImage = d.image || '';
                 return `<div onclick="changePage('donation_detail','${d._id}',event)" class="bg-white p-5 rounded-xl shadow-lg border-t-4 border-accent cursor-pointer hover:shadow-xl transition">${donationImage ? `<img src="${donationImage}" alt="${d.name}" class="w-full h-40 object-cover rounded-lg" onerror="this.src='${FALLBACK_DONATION_IMAGE}'; this.onerror=null;" />` : `<div class="w-full h-40 bg-gradient-to-br from-blue-400 to-green-400 rounded-lg flex items-center justify-center"><i data-lucide="heart" class="w-12 h-12 text-white"></i></div>`}<h3 class="text-xl font-bold mt-3">${d.name}</h3><p class="text-sm text-gray-600">${d.shortDescription || ''}</p><button class="text-sm text-accent font-medium flex items-center mt-2">Read More <i data-lucide="arrow-right" class="w-4 ml-2"></i></button></div>`;
-            }).join('')}</div><div class="mt-12 p-8 bg-gray-100 rounded-xl text-center"><h2 class="text-3xl font-bold">Total Impact</h2><p class="text-accent text-5xl font-extrabold timer-font">£${totalRaised.toLocaleString()}</p><p class="text-gray-500">Funded by the Sweepstackz Community.</p></div>`; mainContentEl.innerHTML = html; lucide.createIcons()
+            }).join('')}</div><div class="mt-12 p-8 bg-gray-100 rounded-xl text-center"><h2 class="text-3xl font-bold">Total Impact</h2><p class="text-accent text-5xl font-extrabold timer-font">$${totalRaised.toLocaleString()}</p><p class="text-gray-500">Funded by the Studentsweeps Community.</p></div>`; mainContentEl.innerHTML = html; lucide.createIcons()
         }
         function renderDonationDetailPage(donationId) {
             const donation = (window.DONATIONS || []).find(d => d._id === donationId);
@@ -1542,8 +1574,8 @@
                         <!-- Left --><div class="md:col-span-2 space-y-4">
                             ${donation.image ? `<img src="${donation.image}" alt="${donation.name}" class="w-full h-auto rounded-xl shadow-lg border border-gray-200 object-cover aspect-square" onerror="this.src='https://placehold.co/400x400?text=Donation'; this.onerror=null;" />` : `<div class="w-full h-auto bg-gradient-to-br from-blue-400 to-green-400 rounded-xl shadow-lg border border-gray-200 flex items-center justify-center aspect-square"><i data-lucide="heart" class="w-24 h-24 text-white"></i></div>`}
                             <div class="bg-white p-5 rounded-xl shadow-md border border-gray-200">
-                                <p class="text-xl font-bold text-gray-900">Goal: <span class="text-accent">£${(donation.goal || 0).toLocaleString()}</span></p>
-                                <p class="text-sm text-gray-500 mb-3">Raised: £${(donation.raised || 0).toLocaleString()}</p>
+                                <p class="text-xl font-bold text-gray-900">Goal: <span class="text-accent">$${(donation.goal || 0).toLocaleString()}</span></p>
+                                <p class="text-sm text-gray-500 mb-3">Raised: $${(donation.raised || 0).toLocaleString()}</p>
                                 <div class="w-full bg-gray-200 rounded-full h-4"><div class="bg-accent h-4 rounded-full" style="width: ${progress}%"></div></div>
                                 <p class="text-center text-sm font-semibold mt-2">${progress.toFixed(0)}% Funded</p>
                             </div>
@@ -1736,7 +1768,7 @@
         };
 
         function renderPartnersPage() { if (currentInterval) clearInterval(currentInterval); const MOCK_PARTNERS = [{ name: 'Luxury Auto Group', logo: 'L.A.G', type: 'Prize Sourcing', description: 'Our primary partner for acquiring and certifying all high-value vehicles, ensuring pristine condition and authenticity.' }, { name: 'Global Youth Foundation', logo: 'GYF', type: 'Charity Partner', description: 'Dedicated to funding education and welfare programs for underprivileged youths around the world.' }, { name: 'Tech Sphere', logo: 'T.S.', type: 'Technology Provider', description: 'Provides the secure, audited platform for random draw generation and transactional security.' }, { name: 'Watches of Distinction', logo: 'W.D.', type: 'Jewellery Sourcing', description: 'Guarantees authenticity and provenance for all high-end timepieces and jewellery prizes.' },]; const html = ` <h1 class="text-4xl font-extrabold pb-4 border-b border-gray-200">Our Trusted Partners</h1> <div class="py-8 space-y-12"> <p class="text-gray-500 max-w-3xl"> We collaborate with world-class organizations to ensure the quality of our prizes, the security of our draws, and the integrity of our charitable contributions. </p> <div class="grid md:grid-cols-2 gap-8"> ${MOCK_PARTNERS.map(p => ` <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 flex items-start space-x-4"> <div class="w-16 h-12 sm:w-20 sm:h-14 rounded-lg flex items-center justify-center bg-gray-100 flex-shrink-0 border border-gray-300"> <span class="font-bold text-lg text-accent">${p.logo}</span> </div> <div> <h3 class="text-xl font-bold text-gray-900 mb-1">${p.name}</h3> <p class="text-sm font-semibold text-gray-500 mb-2">${p.type}</p> <p class="text-sm text-gray-700">${p.description}</p> </div> </div> `).join('')} </div> <section class="pt-8 border-t border-gray-200"> <h2 class="text-3xl font-bold mb-4">Charity Commitment</h2> <p class="text-gray-700 leading-relaxed max-w-4xl"> Our commitment to charity is independently verified by a third-party auditor. For every draw, we partner with reputable organizations to ensure maximum impact. </p> </section> </div> `; mainContentEl.innerHTML = html; }
-        function renderAboutUsPage() { if (currentInterval) clearInterval(currentInterval); const html = ` <h1 class="text-4xl font-extrabold pb-4 border-b border-gray-200">About Sweepstackz.</h1> <div class="grid lg:grid-cols-3 gap-8 pt-8"> <div class="lg:col-span-2 space-y-6 text-gray-700"> <section> <h2 class="text-3xl font-bold mb-3 text-accent">Our Mission</h2> <p class="leading-relaxed"> Sweepstackz was founded on a simple, yet powerful idea: to turn dreams into reality while making a tangible positive impact on the world. We combine the excitement of winning highly sought-after, luxury prizes with a commitment to **social good**. Every entry purchased contributes directly to our featured non-profit partners, ensuring that your participation changes lives. </p> </section> <section> <h2 class="text-3xl font-bold mb-3 text-accent">Transparency & Fairness</h2> <p class="leading-relaxed"> Integrity is at the core of everything we do. All our draws are conducted under strict regulatory oversight, using **certified random number generation algorithms** to ensure every entry has an equal and fair chance of winning. We publish full details of our previous winners and provide clear, verifiable records of all donations made. </p> </section> </div> <div class="lg:col-span-1"> <div class="bg-gray-50 p-6 rounded-xl shadow-sm border border-gray-200 space-y-4"> <h3 class="text-xl font-bold text-gray-900">Join the Movement</h3> <p class="text-sm text-gray-500">Sign up for our newsletter to track our latest prizes and see the impact of your entries.</p> <form onsubmit="handleNewsletterSubmit(event)"> <input type="email" placeholder="Email Address" class="w-full p-3 mb-2 rounded-lg bg-white text-gray-900 border border-gray-300"> <button type="submit" class="w-full bg-accent hover:bg-accent-dark text-white font-semibold py-2 rounded-lg transition">Subscribe</button> </form> </div> </div> </div> `; mainContentEl.innerHTML = html; }
+        function renderAboutUsPage() { if (currentInterval) clearInterval(currentInterval); const html = ` <h1 class="text-4xl font-extrabold pb-4 border-b border-gray-200">About Studentsweeps.</h1> <div class="grid lg:grid-cols-3 gap-8 pt-8"> <div class="lg:col-span-2 space-y-6 text-gray-700"> <section> <h2 class="text-3xl font-bold mb-3 text-accent">Our Mission</h2> <p class="leading-relaxed"> Studentsweeps was founded on a simple, yet powerful idea: to turn dreams into reality while making a tangible positive impact on the world. We combine the excitement of winning highly sought-after, luxury prizes with a commitment to **social good**. Every entry purchased contributes directly to our featured non-profit partners, ensuring that your participation changes lives. </p> </section> <section> <h2 class="text-3xl font-bold mb-3 text-accent">Transparency & Fairness</h2> <p class="leading-relaxed"> Integrity is at the core of everything we do. All our draws are conducted under strict regulatory oversight, using **certified random number generation algorithms** to ensure every entry has an equal and fair chance of winning. We publish full details of our previous winners and provide clear, verifiable records of all donations made. </p> </section> </div> <div class="lg:col-span-1"> <div class="bg-gray-50 p-6 rounded-xl shadow-sm border border-gray-200 space-y-4"> <h3 class="text-xl font-bold text-gray-900">Join the Movement</h3> <p class="text-sm text-gray-500">Sign up for our newsletter to track our latest prizes and see the impact of your entries.</p> <form onsubmit="handleNewsletterSubmit(event)"> <input type="email" placeholder="Email Address" class="w-full p-3 mb-2 rounded-lg bg-white text-gray-900 border border-gray-300"> <button type="submit" class="w-full bg-accent hover:bg-accent-dark text-white font-semibold py-2 rounded-lg transition">Subscribe</button> </form> </div> </div> </div> `; mainContentEl.innerHTML = html; }
 
         // --- Core Application & Auth Logic ---
         const authModal = document.getElementById('auth-modal');
@@ -1890,7 +1922,7 @@
         }
 
         function handleForgotPassword(event) { event.preventDefault(); closeAuthModal(); showMessage(`If an account exists, a reset link has been sent.`); }
-        function handleSupportClick(event) { event.preventDefault(); toggleProfileDropdown(); showMessage(`For support, email us at <br><span class="font-semibold text-accent">support@sweepstackz.com</span>.`); }
+        function handleSupportClick(event) { event.preventDefault(); toggleProfileDropdown(); showMessage(`For support, email us at <br><span class="font-semibold text-accent">support@studentsweeps.com</span>.`); }
 
         function handleEntryPurchase(itemName, itemPrice, isDonation = false, prizeId = null) {
             if (!isLoggedIn) { showMessage(`Please sign in to purchase.`); openAuthModal(); return; }
@@ -1920,6 +1952,39 @@
         }
 
         // --- Checkout modal controls ---
+        function resetCheckoutForm() {
+            // Reset all form fields
+            const billingForm = document.getElementById('billing-form');
+            if (billingForm) {
+                billingForm.reset();
+            }
+            
+            // Reset individual fields explicitly
+            const fields = [
+                'billing-fullname',
+                'billing-email',
+                'billing-address1',
+                'billing-address2',
+                'billing-city',
+                'billing-zip',
+                'billing-country',
+                'billing-state'
+            ];
+            
+            fields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.value = '';
+                }
+            });
+            
+            // Reset save payment checkbox
+            const saveCheckbox = document.getElementById('save-payment');
+            if (saveCheckbox) {
+                saveCheckbox.checked = false;
+            }
+        }
+
         function loadSavedBillingInfo() {
             try {
                 // Auto-fill fullname and email from logged-in user
@@ -1947,6 +2012,10 @@
         }
 
         function openCheckoutModal(itemName, itemPrice, quantity, isEntries, itemId) {
+            // Reset form first to ensure clean state
+            resetCheckoutForm();
+            
+            // Set fresh checkout state
             checkoutState = {
                 itemName,
                 itemPrice: Number(itemPrice || 0),
@@ -1956,11 +2025,11 @@
                 donationId: !isEntries ? itemId : null
             };
 
-            // Load saved billing info
+            // Load saved billing info (this will populate fields after reset)
             loadSavedBillingInfo();
             document.getElementById('checkout-order-title').textContent = itemName;
             const priceLabel = isEntries ? `per entry` : `per donation`;
-            document.getElementById('checkout-order-price').innerHTML = `£${(checkoutState.itemPrice).toLocaleString()} <span class="text-xs text-gray-500">${priceLabel}</span>`;
+            document.getElementById('checkout-order-price').innerHTML = `$${(checkoutState.itemPrice).toLocaleString()} <span class="text-xs text-gray-500">${priceLabel}</span>`;
 
             const typeLabel = document.getElementById('checkout-order-type-label');
             const quantityLabel = document.getElementById('checkout-quantity-label');
@@ -2054,6 +2123,17 @@
         function closeCheckoutModal() {
             const el = document.getElementById('checkout-modal');
             if (el) { el.classList.add('is-hidden'); el.classList.remove('is-visible'); }
+            
+            // Reset checkout state and form when closing
+            checkoutState = {
+                itemName: null,
+                itemPrice: 0,
+                quantity: 0,
+                isEntries: false,
+                prizeId: null,
+                donationId: null
+            };
+            resetCheckoutForm();
         }
 
         function updateCheckoutTotals() {
@@ -2061,9 +2141,9 @@
             const formattedTotal = subtotal.toFixed(2);
 
             document.getElementById('checkout-order-entries').textContent = `${checkoutState.quantity}`;
-            document.getElementById('checkout-order-subtotal').textContent = `£${formattedTotal}`;
-            document.getElementById('checkout-order-total').textContent = `£${formattedTotal}`;
-            document.getElementById('checkout-confirm-amount').textContent = `£${formattedTotal}`;
+            document.getElementById('checkout-order-subtotal').textContent = `$${formattedTotal}`;
+            document.getElementById('checkout-order-total').textContent = `$${formattedTotal}`;
+            document.getElementById('checkout-confirm-amount').textContent = `$${formattedTotal}`;
         }
 
         function finalizeCheckout() {
@@ -2103,10 +2183,16 @@
 
             showMessage('Processing payment...');
             try {
-                if (checkoutState.isEntries) {
+                // Store checkout state values before clearing
+                const isEntries = checkoutState.isEntries;
+                const prizeId = checkoutState.prizeId;
+                const donationId = checkoutState.donationId;
+                const quantity = checkoutState.quantity;
+                
+                if (isEntries) {
                     const payload = {
-                        prizeId: checkoutState.prizeId,
-                        amount: checkoutState.quantity,
+                        prizeId: prizeId,
+                        amount: quantity,
                         totalCost: subtotal,
                         paymentProvider: provider,
                         user: {
@@ -2117,15 +2203,15 @@
                     window.SocketClient.emit('entries:purchase', payload);
 
                     // Store prize ID and entry amount for real-time update
-                    if (checkoutState.prizeId) {
+                    if (prizeId) {
                         window.pendingEntryPurchase = {
-                            prizeId: checkoutState.prizeId,
-                            amount: checkoutState.quantity
+                            prizeId: prizeId,
+                            amount: quantity
                         };
                     }
                 } else {
                     const payload = {
-                        donationId: checkoutState.donationId,
+                        donationId: donationId,
                         amount: subtotal,
                         paymentProvider: provider,
                         user: {
@@ -2135,6 +2221,17 @@
                     };
                     window.SocketClient.emit('donation:purchase', payload);
                 }
+                
+                // Clear checkout state immediately after emitting to prevent repurchase issues
+                checkoutState = {
+                    itemName: null,
+                    itemPrice: 0,
+                    quantity: 0,
+                    isEntries: false,
+                    prizeId: null,
+                    donationId: null
+                };
+                
                 closeCheckoutModal();
             } catch (e) {
                 console.warn('purchase failed', e);
@@ -2162,7 +2259,7 @@
             const entryPrice = prize.entries?.entryPrice ?? 0;
             selectedEntryOption = entries;
             const totalEl = document.getElementById('entry-total');
-            if (totalEl) totalEl.textContent = `£${(entries * entryPrice).toLocaleString()}`;
+            if (totalEl) totalEl.textContent = `$${(entries * entryPrice).toLocaleString()}`;
 
             // Update all button styles with Tailwind classes
             document.querySelectorAll('.product-option-button').forEach(btn => {
@@ -2489,8 +2586,8 @@
             document.getElementById('tx-date').textContent = txDate;
             document.getElementById('tx-status').innerHTML = `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium text-white ${statusConfig.color}"><i data-lucide="${statusConfig.icon}" class="w-3 h-3 mr-1.5"></i> ${displayStatus}</span>`;
             document.getElementById('tx-entries').textContent = isDonation ? 'N/A' : txEntries.toLocaleString();
-            document.getElementById('tx-cost').textContent = isDonation ? 'N/A' : `£${txCost.toLocaleString()}`;
-            document.getElementById('tx-total').textContent = `£${txTotal.toLocaleString()}`;
+            document.getElementById('tx-cost').textContent = isDonation ? 'N/A' : `$${txCost.toLocaleString()}`;
+            document.getElementById('tx-total').textContent = `$${txTotal.toLocaleString()}`;
             document.getElementById('tx-entry-numbers').textContent = isDonation ? 'N/A (Donation)' : `#${startNum} - #${endNum}`;
 
             openTransactionModal();
@@ -2545,7 +2642,7 @@
                             let amount = 0;
                             if (tx.category === 'order' && tx.order?.entries) {
                                 amount = parseFloat(tx.order.entries.totalCost) || 0;
-                                if (amount > 0) console.log(`[Profile] Order ${index}: £${amount}`);
+                                if (amount > 0) console.log(`[Profile] Order ${index}: $${amount}`);
                             } else if (tx.category === 'donation' && tx.donation) {
                                 // First try the stored amount field, then fall back to invoice data
                                 amount = parseFloat(tx.donation.amount) ||
@@ -2555,13 +2652,13 @@
                                     parseFloat(tx.invoiceData?.price_amount) ||
                                     parseFloat(tx.invoiceData?.priceAmount) ||
                                     parseFloat(tx.invoiceData?.amount) || 0;
-                                if (amount > 0) console.log(`[Profile] Donation ${index}: £${amount}`);
+                                if (amount > 0) console.log(`[Profile] Donation ${index}: $${amount}`);
                             } else {
                                 // Fallback for old format
                                 const cost = parseFloat(tx.cost) || 0;
                                 const entries = parseFloat(tx.entries) || 1;
                                 amount = cost * entries;
-                                if (amount > 0) console.log(`[Profile] Old format ${index}: £${amount}`);
+                                if (amount > 0) console.log(`[Profile] Old format ${index}: $${amount}`);
                             }
                             total += amount;
                         } catch (e) {
@@ -2709,7 +2806,7 @@
                         <td class="py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-600">${txDate}</td>
                         <td class="py-3 px-2 sm:px-4 font-medium text-gray-800 text-xs sm:text-sm">${txPrizeName}</td>
                         <td class="py-3 px-2 sm:px-4 text-center text-gray-600 text-xs sm:text-sm">${isDonation ? '-' : txEntries}</td>
-                        <td class="py-3 px-2 sm:px-4 text-center font-semibold text-accent text-xs sm:text-sm">£${txTotal.toLocaleString()}</td>
+                        <td class="py-3 px-2 sm:px-4 text-center font-semibold text-accent text-xs sm:text-sm">$${txTotal.toLocaleString()}</td>
                         <td class="py-3 px-2 sm:px-4 text-center">
                             <span class="inline-flex items-center px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium text-white ${statusConfig.color}">
                                 <i data-lucide="${statusConfig.icon}" class="w-2 h-2 sm:w-3 sm:h-3 mr-1 sm:mr-1.5"></i> ${displayStatus}
@@ -2726,7 +2823,7 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div class="bg-gray-50 p-4 rounded-lg text-center border"><p class="text-xl sm:text-2xl font-bold text-accent">${userStats.totalOrders}</p><p class="text-xs sm:text-sm text-gray-500">Total Orders</p></div>
                         <div class="bg-gray-50 p-4 rounded-lg text-center border"><p class="text-xl sm:text-2xl font-bold text-accent">${userStats.totalEntries.toLocaleString()}</p><p class="text-xs sm:text-sm text-gray-500">Total Entries</p></div>
-                        <div class="bg-gray-50 p-4 rounded-lg text-center border"><p class="text-xl sm:text-2xl font-bold text-accent">£${userStats.totalSpent.toLocaleString()}</p><p class="text-xs sm:text-sm text-gray-500">Total Spent</p></div>
+                        <div class="bg-gray-50 p-4 rounded-lg text-center border"><p class="text-xl sm:text-2xl font-bold text-accent">$${userStats.totalSpent.toLocaleString()}</p><p class="text-xs sm:text-sm text-gray-500">Total Spent</p></div>
                         <div class="bg-gray-50 p-4 rounded-lg text-center border"><p class="text-xl sm:text-2xl font-bold text-accent">${userStats.prizesWon}</p><p class="text-xs sm:text-sm text-gray-500">Prizes Won</p></div>
                     </div>
                     <div class="bg-white rounded-xl shadow-md border">

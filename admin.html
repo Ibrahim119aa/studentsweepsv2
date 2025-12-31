@@ -125,7 +125,7 @@
     <div id="sidebar" class="w-64 bg-white border-r shadow-xl flex flex-col fixed h-full z-30">
         <div class="p-6 border-b flex items-center justify-between">
             <div>
-                <h1 id="sidebar-title" class="text-2xl font-black text-gray-900">Sweepstackz</h1>
+                <h1 id="sidebar-title" class="text-2xl font-black text-gray-900">Studentsweeps</h1>
                 <p id="sidebar-user" class="text-xs text-gray-500 mt-1 font-mono">Admin: ...</p>
             </div>
             <!-- Close button for mobile -->
@@ -1308,7 +1308,7 @@
                 <div class="space-y-8">
                     <div class="grid md:grid-cols-4 gap-6">
                         <div class="p-6 bg-white rounded-xl shadow-lg border border-b-4" style="border-bottom-color: ${primaryColor}"><h3 class="text-sm font-semibold uppercase text-gray-500 mb-2">Active Prizes</h3><p class="text-3xl font-bold" style="color: ${primaryColor}">${activePrizes}</p><p class="text-xs text-gray-500 mt-1">Total: ${totalPrizes}</p></div>
-                        <div class="p-6 bg-white rounded-xl shadow-lg border border-b-4 border-green-400"><h3 class="text-sm font-semibold uppercase text-gray-500 mb-2">Total Funds Raised</h3><p class="text-3xl font-bold text-green-600">£${(totalDonationRaised || 0).toLocaleString()}</p><p class="text-xs text-gray-500 mt-1">Goal: £${totalDonationGoal.toLocaleString()}</p></div>
+                        <div class="p-6 bg-white rounded-xl shadow-lg border border-b-4 border-green-400"><h3 class="text-sm font-semibold uppercase text-gray-500 mb-2">Total Funds Raised</h3><p class="text-3xl font-bold text-green-600">$${(totalDonationRaised || 0).toLocaleString()}</p><p class="text-xs text-gray-500 mt-1">Goal: $${totalDonationGoal.toLocaleString()}</p></div>
                         <div class="p-6 bg-white rounded-xl shadow-lg border border-b-4 border-yellow-400"><h3 class="text-sm font-semibold uppercase text-gray-500 mb-2">Total Transactions</h3><p class="text-3xl font-bold text-yellow-600">${totalOrders.toLocaleString()}</p><p class="text-xs text-gray-500 mt-1">Completed orders</p></div>
                         <div class="p-6 bg-white rounded-xl shadow-lg border border-b-4 border-purple-400"><h3 class="text-sm font-semibold uppercase text-gray-500 mb-2">Registered Users</h3><p class="text-3xl font-bold text-purple-600">${totalUsers.toLocaleString()}</p><p class="text-xs text-gray-500 mt-1">Unique users who participated</p></div>
                     </div>
@@ -1331,7 +1331,7 @@
                                 ${recentOrders.map(order => `
                                      <li class="flex justify-between items-center text-sm border-b pb-1 last:border-b-0">
                                         <span class="font-medium text-gray-700">${order.user}</span>
-                                        <span class="text-xs text-yellow-600 font-bold">£${order.amount}</span>
+                                        <span class="text-xs text-yellow-600 font-bold">$${order.amount}</span>
                                     </li>
                                 `).join('') || `<li class="text-gray-500">No recent orders.</li>`}
                             </ul>
@@ -1385,7 +1385,7 @@
                                             <tr key="${p._id}" class="hover:bg-gray-50">
                                                 <td class="py-3 px-4 text-sm font-medium text-gray-900">${p.name}</td>
                                                 <td class="py-3 px-4 text-sm text-gray-600">
-                                                    £${entriesSold * (p.entries?.entryPrice || 0)}</td>
+                                                    $${entriesSold * (p.entries?.entryPrice || 0)}</td>
                                                 <td class="py-3 px-4 text-sm text-center">
                                                   ${entryPrice.toLocaleString()}/${maxEntries.toLocaleString()}                                                    
                                                     </td>
@@ -1448,7 +1448,7 @@
                         </div>
                         <div class="grid md:grid-cols-2 gap-6">
                             <div><label class="block text-sm font-medium mb-1">Draw Date *</label><input type="datetime-local" name="drawDate" value="${f.drawDate}" required class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300"/></div>
-                            <div><label class="block text-sm font-medium mb-1">Entry Price (£) *</label><input type="number" name="entryPrice" value="${f.entryPrice}" required min="1" step="0.01" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300"/></div>
+                            <div><label class="block text-sm font-medium mb-1">Entry Price ($) *</label><input type="number" name="entryPrice" value="${f.entryPrice}" required min="1" step="0.01" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300"/></div>
                         </div>
                         <div class="grid md:grid-cols-3 gap-6">
                             <div><label class="block text-sm font-medium mb-1">Current Entries Sold</label><input type="number" name="entries" value="${f.entries}" required min="0" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300" readonly/></div>
@@ -1669,8 +1669,8 @@
                                 <tr>
                                     <th class="py-3 px-4 text-left text-xs font-semibold uppercase text-gray-600">Title</th>
                                     <th class="py-3 px-4 text-left text-xs font-semibold uppercase text-gray-600">Short Desc.</th>
-                                    <th class="py-3 px-4 text-center text-xs font-semibold uppercase text-gray-600">Goal (£)</th>
-                                    <th class="py-3 px-4 text-center text-xs font-semibold uppercase text-gray-600">Raised (£)</th>
+                                    <th class="py-3 px-4 text-center text-xs font-semibold uppercase text-gray-600">Goal ($)</th>
+                                    <th class="py-3 px-4 text-center text-xs font-semibold uppercase text-gray-600">Raised ($)</th>
                                     <th class="py-3 px-4 text-center text-xs font-semibold uppercase text-gray-600">Progress</th>
                                     <th class="py-3 px-4 text-right text-xs font-semibold uppercase text-gray-600">Actions</th>
                                 </tr>
@@ -1683,8 +1683,8 @@
                                             <tr key="${d._id}" class="hover:bg-gray-50">
                                                 <td class="py-3 px-4 text-sm font-medium text-gray-900">${d.name}</td>
                                                 <td class="py-3 px-4 text-sm text-gray-600">${(d.shortDescription || '').substring(0, 30)}...</td>
-                                                <td class="py-3 px-4 text-sm text-center">£${(d.goal || 0).toLocaleString()}</td>
-                                                <td class="py-3 px-4 text-sm text-center">£${(d.raised || 0).toLocaleString()}</td>
+                                                <td class="py-3 px-4 text-sm text-center">$${(d.goal || 0).toLocaleString()}</td>
+                                                <td class="py-3 px-4 text-sm text-center">$${(d.raised || 0).toLocaleString()}</td>
                                                 <td class="py-3 px-4 text-sm text-center"><span class="font-semibold ${progress >= 100 ? 'text-teal-600' : 'text-yellow-600'}">${progress.toFixed(0)}%</span></td>
                                                 <td class="py-3 px-4 text-right flex items-center justify-end space-x-2">
                                                     <button onclick="handleViewChange('donations', 'edit', '${d._id}')" class="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50">${ICONS.Edit()}</button>
@@ -1756,8 +1756,8 @@
                         
                         <div><label class="block text-sm font-medium mb-1">Detail Text (Long description) *</label><textarea name="detail" rows="3" required class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300">${f.detail}</textarea></div>
                         <div class="grid md:grid-cols-2 gap-6">
-                            <div><label class="block text-sm font-medium mb-1">Goal Amount (£) *</label><input type="number" name="goal" value="${f.goal}" required min="1" step="100" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300"/></div>
-                            <div><label class="block text-sm font-medium mb-1">Amount Raised (£)</label><input type="number" name="raised" value="${f.raised}" min="0" step="1" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300" readonly/></div>
+                            <div><label class="block text-sm font-medium mb-1">Goal Amount ($) *</label><input type="number" name="goal" value="${f.goal}" required min="1" step="100" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300"/></div>
+                            <div><label class="block text-sm font-medium mb-1">Amount Raised ($)</label><input type="number" name="raised" value="${f.raised}" min="0" step="1" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300" readonly/></div>
                         </div>
                         <div class="flex justify-end space-x-4 pt-6 border-t">
                             <button type="button" onclick="handleViewChange('donations', 'list')" class="px-6 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400">Cancel</button>
@@ -1915,7 +1915,7 @@
                                      <th class="py-3 px-4 text-left text-xs font-semibold uppercase text-gray-600">User</th>
                                      <th class="py-3 px-4 text-left text-xs font-semibold uppercase text-gray-600">Prize</th>
                                      <th class="py-3 px-4 text-center text-xs font-semibold uppercase text-gray-600">Entries</th>
-                                     <th class="py-3 px-4 text-center text-xs font-semibold uppercase text-gray-600">Amount (£)</th>
+                                     <th class="py-3 px-4 text-center text-xs font-semibold uppercase text-gray-600">Amount ($)</th>
                                      <th class="py-3 px-4 text-center text-xs font-semibold uppercase text-gray-600">Status</th>
                                      <th class="py-3 px-4 text-center text-xs font-semibold uppercase text-gray-600">Date</th>
                                  </tr>
@@ -1928,7 +1928,7 @@
                                          <td class="py-3 px-4 font-medium text-gray-900">${o.user}</td>
                                          <td class="py-3 px-4 text-gray-600">${o.prize}</td>
                                          <td class="py-3 px-4 text-center font-bold" style="color: ${primaryColor}">${o.entries}</td>
-                                         <td class="py-3 px-4 text-center font-semibold">£${o.amount}</td>
+                                         <td class="py-3 px-4 text-center font-semibold">$${o.amount}</td>
                                          <td class="py-3 px-4 text-center">
                                             <span class="text-xs font-medium px-2 py-0.5 rounded-full ${o.status === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
                                                 ${o.status}
