@@ -2223,11 +2223,30 @@
             const subtotal = checkoutState.itemPrice * checkoutState.quantity;
 
             // Verify socket connection before proceeding
-            if (!window.SocketClient || !window.SocketClient.isConnected || !window.SocketClient.isConnected()) {
-                showMessage('Connection lost. Please refresh the page and try again.', 'error');
-                console.error('[Checkout] Socket not connected');
+            if (!window.SocketClient) {
+                showMessage('Socket client not available. Please refresh the page.', 'error');
+                console.error('[Checkout] SocketClient not available');
                 return;
             }
+            
+            if (!window.SocketClient.isConnected || !window.SocketClient.isConnected()) {
+                showMessage('Connection lost. Please refresh the page and try again.', 'error');
+                console.error('[Checkout] Socket not connected. isConnected:', window.SocketClient.isConnected?.());
+                return;
+            }
+            
+            // Get socket instance to verify connection
+            const socketInstance = window.SocketClient._getSocket ? window.SocketClient._getSocket() : null;
+            if (socketInstance && !socketInstance.connected) {
+                console.error('[Checkout] Socket instance exists but not connected. Socket ID:', socketInstance.id);
+                showMessage('Connection lost. Attempting to reconnect...', 'error');
+                if (window.SocketClient.init) {
+                    window.SocketClient.init();
+                }
+                return;
+            }
+            
+            console.log('[Checkout] Socket connection verified. Socket ID:', socketInstance?.id, 'Connected:', socketInstance?.connected);
 
             showMessage('Processing payment...');
             try {

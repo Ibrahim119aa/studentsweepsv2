@@ -64,7 +64,13 @@ window.SocketClient = (function() {
     // Ensure purchase listeners are registered before emitting purchase events
     // This fixes the issue where second purchase attempt doesn't receive invoice URL
     if (event === 'entries:purchase' || event === 'donation:purchase') {
-      ensurePurchaseListeners();
+      console.log('[SocketClient] 🔄 Purchase event detected - ensuring listeners are registered...');
+      const listenersEnsured = ensurePurchaseListeners();
+      if (!listenersEnsured) {
+        console.error('[SocketClient] ❌ Failed to ensure purchase listeners!');
+        return false;
+      }
+      console.log('[SocketClient] ✅ Purchase listeners ensured before emitting');
     }
     
     if (!isConnected || !socket.connected) {
@@ -211,7 +217,17 @@ window.SocketClient = (function() {
 
   // Ensure purchase event listeners are always registered
   function ensurePurchaseListeners() {
-    if (!socket) return;
+    if (!socket) {
+      console.warn('[SocketClient] Cannot ensure purchase listeners - socket not available');
+      return false;
+    }
+    
+    console.log('[SocketClient] ========================================');
+    console.log('[SocketClient] Ensuring purchase listeners');
+    console.log('[SocketClient] Socket ID:', socket.id);
+    console.log('[SocketClient] Socket connected:', socket.connected);
+    console.log('[SocketClient] Socket disconnected:', socket.disconnected);
+    console.log('[SocketClient] ========================================');
     
     // Remove and re-register purchase listeners to ensure they're active
     socket.removeAllListeners('entries:purchase:invoice');
@@ -220,13 +236,48 @@ window.SocketClient = (function() {
     socket.removeAllListeners('donation:purchase:created');
     socket.removeAllListeners('donation:purchase:error');
     
-    socket.on('entries:purchase:invoice', onEntryPurchaseInvoice);
-    socket.on('entries:purchase:created', onEntryPurchaseCreated);
-    socket.on('donation:purchase:invoice', onDonationPurchaseInvoice);
-    socket.on('donation:purchase:created', onDonationPurchaseCreated);
-    socket.on('donation:purchase:error', onDonationPurchaseError);
+    // Register listeners with wrapper functions that log when called
+    socket.on('entries:purchase:invoice', function(data) {
+      console.log('[SocketClient] 🔔🔔🔔 entries:purchase:invoice listener FIRED! 🔔🔔🔔');
+      console.log('[SocketClient] Received at:', new Date().toISOString());
+      console.log('[SocketClient] Data:', data);
+      onEntryPurchaseInvoice(data);
+    });
+    socket.on('entries:purchase:created', function(data) {
+      console.log('[SocketClient] 🔔 entries:purchase:created listener FIRED!', data);
+      onEntryPurchaseCreated(data);
+    });
+    socket.on('donation:purchase:invoice', function(data) {
+      console.log('[SocketClient] 🔔🔔🔔 donation:purchase:invoice listener FIRED! 🔔🔔🔔');
+      console.log('[SocketClient] Received at:', new Date().toISOString());
+      console.log('[SocketClient] Data:', data);
+      onDonationPurchaseInvoice(data);
+    });
+    socket.on('donation:purchase:created', function(data) {
+      console.log('[SocketClient] 🔔 donation:purchase:created listener FIRED!', data);
+      onDonationPurchaseCreated(data);
+    });
+    socket.on('donation:purchase:error', function(data) {
+      console.log('[SocketClient] 🔔 donation:purchase:error listener FIRED!', data);
+      onDonationPurchaseError(data);
+    });
     
-    console.log('[SocketClient] Purchase event listeners ensured');
+    // Add a catch-all listener for debugging (temporary - logs all events)
+    if (!socket._debugListenerAdded) {
+      socket.onAny((eventName, ...args) => {
+        if (eventName.includes('purchase') || eventName.includes('invoice')) {
+          console.log('[SocketClient] 🎯 CATCH-ALL: Received event:', eventName, 'with data:', args);
+        }
+      });
+      socket._debugListenerAdded = true;
+      console.log('[SocketClient] Added catch-all debug listener');
+    }
+    
+    // Verify listeners are registered
+    const listenerCount = socket._callbacks ? Object.keys(socket._callbacks).filter(k => k.includes('purchase')).length : 0;
+    console.log('[SocketClient] ✅ Purchase event listeners ensured. Active purchase listeners:', listenerCount);
+    console.log('[SocketClient] ========================================');
+    return true;
   }
 
   // Setup all socket event listeners
@@ -743,7 +794,10 @@ window.SocketClient = (function() {
 
   function onEntryPurchaseInvoice(data) {
     console.log('[SocketClient] ========================================');
-    console.log('[SocketClient] Entry purchase invoice event received');
+    console.log('[SocketClient] ✅✅✅ Entry purchase invoice event received! ✅✅✅');
+    console.log('[SocketClient] Socket ID:', socket?.id);
+    console.log('[SocketClient] Socket connected:', socket?.connected);
+    console.log('[SocketClient] Timestamp:', new Date().toISOString());
     console.log('[SocketClient] Full data:', JSON.stringify(data, null, 2));
     console.log('[SocketClient] ========================================');
     
@@ -817,7 +871,10 @@ window.SocketClient = (function() {
 
   function onDonationPurchaseInvoice(data) {
     console.log('[SocketClient] ========================================');
-    console.log('[SocketClient] Donation purchase invoice event received');
+    console.log('[SocketClient] ✅✅✅ Donation purchase invoice event received! ✅✅✅');
+    console.log('[SocketClient] Socket ID:', socket?.id);
+    console.log('[SocketClient] Socket connected:', socket?.connected);
+    console.log('[SocketClient] Timestamp:', new Date().toISOString());
     console.log('[SocketClient] Full data:', JSON.stringify(data, null, 2));
     console.log('[SocketClient] ========================================');
     
