@@ -94,6 +94,12 @@ window.SocketClient = (function() {
         return false;
       }
       
+      // Verify socket is truly ready - check if it has an ID and is connected
+      if (!socket.id) {
+        console.error('[SocketClient] ❌ Socket exists but has no ID! Socket may not be fully connected.');
+        return false;
+      }
+      
       const listenersEnsured = ensurePurchaseListeners();
       if (!listenersEnsured) {
         console.error('[SocketClient] ❌ Failed to ensure purchase listeners!');
@@ -102,10 +108,32 @@ window.SocketClient = (function() {
       console.log('[SocketClient] ✅ Purchase listeners ensured before emitting');
       
       // Triple-check connection after ensuring listeners
-      if (!socket || !socket.connected || socket.disconnected) {
-        console.error('[SocketClient] ❌ Socket disconnected after ensuring listeners!');
+      if (!socket || !socket.connected || socket.disconnected || !socket.id) {
+        console.error('[SocketClient] ❌ Socket disconnected or invalid after ensuring listeners!', {
+          hasSocket: !!socket,
+          connected: socket?.connected,
+          disconnected: socket?.disconnected,
+          socketId: socket?.id
+        });
         return false;
       }
+      
+      // Verify listeners are actually registered (check internal callbacks)
+      try {
+        const hasInvoiceListener = socket._callbacks && (
+          socket._callbacks['$entries:purchase:invoice'] || 
+          socket._callbacks['$donation:purchase:invoice']
+        );
+        console.log('[SocketClient] Listener verification:', {
+          hasInvoiceListener: !!hasInvoiceListener,
+          socketId: socket.id,
+          connected: socket.connected
+        });
+      } catch (e) {
+        // Ignore if we can't check callbacks (they might be private)
+        console.log('[SocketClient] Could not verify listener callbacks (expected)');
+      }
+      
       console.log('[SocketClient] ✅ Socket verified connected. Socket ID:', socket.id);
       console.log('[SocketClient] ========================================');
     }
@@ -764,6 +792,12 @@ window.SocketClient = (function() {
 
   function onMyTransactionsResponse(data) {
     console.log('[SocketClient] onMyTransactionsResponse received:', data);
+    
+    // Check if there's a pending transaction check handler (from checkout timeout)
+    if (window.SocketClient && window.SocketClient._transactionCheckHandler) {
+      console.log('[SocketClient] Calling transaction check handler...');
+      window.SocketClient._transactionCheckHandler(data);
+    }
     if (!data) {
       window.TRANSACTIONS_LOADING = false;
       return;

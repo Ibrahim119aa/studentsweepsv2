@@ -2341,7 +2341,7 @@
                 // Don't close modal immediately - wait for invoice response
                 // The modal will be closed when we receive the invoice URL and redirect
                 // But set a timeout to close it if no response comes
-                const invoiceTimeout = setTimeout(() => {
+                const invoiceTimeout = setTimeout(async () => {
                     console.warn('[Checkout] ⚠️⚠️⚠️ No invoice response received after 15 seconds ⚠️⚠️⚠️');
                     console.warn('[Checkout] Socket state:', {
                         hasSocketClient: !!window.SocketClient,
@@ -2350,14 +2350,84 @@
                         socketId: window.SocketClient?._getSocket?.()?.id || 'N/A'
                     });
                     
-                    // Try to check if there's a pending transaction
+                    // Try to check if there's a pending transaction with invoice URL
+                    let foundInvoiceUrl = null;
                     if (window.SocketClient && window.SocketClient.requestMyTransactions) {
                         console.log('[Checkout] Requesting transactions to check for pending payment...');
-                        window.SocketClient.requestMyTransactions();
+                        
+                        // Request transactions and wait for response
+                        const checkTransaction = new Promise((resolve) => {
+                            const originalHandler = window.SocketClient._transactionCheckHandler;
+                            
+                            // Set up a one-time listener for transaction response
+                            const checkHandler = (data) => {
+                                if (data && data.success && data.transactions && Array.isArray(data.transactions)) {
+                                    // Find the most recent pending transaction
+                                    const pendingTx = data.transactions.find(tx => 
+                                        (tx.category === 'order' && tx.order?.status === 'pendingPayment' && !tx.order?.isPaid) ||
+                                        (tx.category === 'donation' && !tx.donation?.isPaid)
+                                    );
+                                    
+                                    if (pendingTx) {
+                                        // Try to extract invoice URL
+                                        if (pendingTx.order?.invoiceData) {
+                                            const invoice = pendingTx.order.invoiceData;
+                                            if (invoice.url) foundInvoiceUrl = invoice.url;
+                                            else if (invoice.invoice_url) foundInvoiceUrl = invoice.invoice_url;
+                                            else if (invoice.payment_url) foundInvoiceUrl = invoice.payment_url;
+                                        } else if (pendingTx.donation?.invoiceData) {
+                                            const invoice = pendingTx.donation.invoiceData;
+                                            if (invoice.url) foundInvoiceUrl = invoice.url;
+                                            else if (invoice.invoice_url) foundInvoiceUrl = invoice.invoice_url;
+                                            else if (invoice.payment_url) foundInvoiceUrl = invoice.payment_url;
+                                        }
+                                        
+                                        console.log('[Checkout] Found pending transaction:', pendingTx.trxID, 'Invoice URL:', foundInvoiceUrl);
+                                    }
+                                }
+                                
+                                // Restore original handler if it existed
+                                if (originalHandler) {
+                                    window.SocketClient._transactionCheckHandler = originalHandler;
+                                } else {
+                                    delete window.SocketClient._transactionCheckHandler;
+                                }
+                                
+                                resolve(foundInvoiceUrl);
+                            };
+                            
+                            window.SocketClient._transactionCheckHandler = checkHandler;
+                            window.SocketClient.requestMyTransactions();
+                            
+                            // Timeout after 3 seconds
+                            setTimeout(() => {
+                                if (window.SocketClient._transactionCheckHandler === checkHandler) {
+                                    delete window.SocketClient._transactionCheckHandler;
+                                }
+                                resolve(null);
+                            }, 3000);
+                        });
+                        
+                        foundInvoiceUrl = await checkTransaction;
                     }
                     
-                    closeCheckoutModal();
-                    showMessage('Payment processing is taking longer than expected. Please check your transactions page. If payment was processed, you will see it there.', 'warning');
+                    if (foundInvoiceUrl) {
+                        console.log('[Checkout] ✅ Found invoice URL from transaction check! Redirecting...');
+                        if (window.pendingInvoiceTimeout) {
+                            clearTimeout(window.pendingInvoiceTimeout);
+                            window.pendingInvoiceTimeout = null;
+                        }
+                        if (typeof window.closeCheckoutModal === 'function') {
+                            window.closeCheckoutModal();
+                        }
+                        if (window.showMessage) window.showMessage('Redirecting to payment...', 'success');
+                        setTimeout(() => {
+                            window.location.href = foundInvoiceUrl;
+                        }, 100);
+                    } else {
+                        closeCheckoutModal();
+                        showMessage('Payment processing is taking longer than expected. Please check your transactions page. If payment was processed, you will see it there.', 'warning');
+                    }
                 }, 15000); // Increased to 15 seconds
                 
                 // Store timeout ID so we can clear it when invoice is received
