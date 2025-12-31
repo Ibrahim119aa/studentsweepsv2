@@ -64,13 +64,50 @@ window.SocketClient = (function() {
     // Ensure purchase listeners are registered before emitting purchase events
     // This fixes the issue where second purchase attempt doesn't receive invoice URL
     if (event === 'entries:purchase' || event === 'donation:purchase') {
+      console.log('[SocketClient] ========================================');
       console.log('[SocketClient] 🔄 Purchase event detected - ensuring listeners are registered...');
+      console.log('[SocketClient] Event:', event);
+      console.log('[SocketClient] Socket state before ensure:', {
+        hasSocket: !!socket,
+        socketId: socket?.id,
+        connected: socket?.connected,
+        disconnected: socket?.disconnected,
+        isConnected: isConnected
+      });
+      
+      // If socket is not connected, try to reconnect immediately
+      if (!socket || !socket.connected || socket.disconnected) {
+        console.warn('[SocketClient] ⚠️ Socket not connected before purchase emit. Attempting to reconnect...');
+        if (socket && socket.disconnected) {
+          try {
+            socket.connect();
+            console.log('[SocketClient] Reconnection initiated...');
+          } catch (err) {
+            console.error('[SocketClient] Failed to reconnect:', err);
+          }
+        } else if (!socket) {
+          console.error('[SocketClient] ❌ Socket not available. Initializing new connection...');
+          init();
+        }
+        // Return false - caller should retry after connection is established
+        console.error('[SocketClient] ❌ Cannot emit purchase event - socket not connected');
+        return false;
+      }
+      
       const listenersEnsured = ensurePurchaseListeners();
       if (!listenersEnsured) {
         console.error('[SocketClient] ❌ Failed to ensure purchase listeners!');
         return false;
       }
       console.log('[SocketClient] ✅ Purchase listeners ensured before emitting');
+      
+      // Triple-check connection after ensuring listeners
+      if (!socket || !socket.connected || socket.disconnected) {
+        console.error('[SocketClient] ❌ Socket disconnected after ensuring listeners!');
+        return false;
+      }
+      console.log('[SocketClient] ✅ Socket verified connected. Socket ID:', socket.id);
+      console.log('[SocketClient] ========================================');
     }
     
     if (!isConnected || !socket.connected) {
@@ -79,12 +116,15 @@ window.SocketClient = (function() {
       return false;
     }
     
-    console.log(`[SocketClient] Emitting: ${event}`, data);
+    console.log(`[SocketClient] 📤 Emitting: ${event}`, data);
+    console.log(`[SocketClient] Socket ID: ${socket.id}, Connected: ${socket.connected}`);
     try {
-      socket.emit(event, data);
+      const emitResult = socket.emit(event, data);
+      console.log(`[SocketClient] ✅ Emit sent. Result:`, emitResult !== false ? 'success' : 'failed');
+      console.log(`[SocketClient] Emit timestamp:`, new Date().toISOString());
       return true;
     } catch (err) {
-      console.error(`[SocketClient] Error emitting ${event}:`, err);
+      console.error(`[SocketClient] ❌ Error emitting ${event}:`, err);
       return false;
     }
   }
@@ -387,7 +427,22 @@ window.SocketClient = (function() {
     console.log('✅ [SocketClient] ========================================');
     
     // Ensure purchase event listeners are registered on every connect
+    // This is critical for second purchase attempts
+    console.log('[SocketClient] Ensuring purchase listeners on connect...');
     ensurePurchaseListeners();
+    
+    // Verify listeners are actually registered
+    setTimeout(() => {
+      const hasInvoiceListener = socket._callbacks && (
+        socket._callbacks['$entries:purchase:invoice'] || 
+        socket._callbacks['$donation:purchase:invoice']
+      );
+      console.log('[SocketClient] Purchase listener verification:', {
+        hasInvoiceListener: !!hasInvoiceListener,
+        socketId: socket.id,
+        connected: socket.connected
+      });
+    }, 100);
     
     // Enable reconnection now that initial connection is successful
     if (socket && socket.io) {
@@ -827,26 +882,29 @@ window.SocketClient = (function() {
     }
     
     if (url && url.trim() !== '') {
-      console.log('[SocketClient] ✅ Redirecting to payment URL:', url);
+      console.log('[SocketClient] ✅✅✅ SUCCESS! Redirecting to payment URL:', url);
       
       // Clear any pending invoice timeout
       if (window.pendingInvoiceTimeout) {
         clearTimeout(window.pendingInvoiceTimeout);
         window.pendingInvoiceTimeout = null;
+        console.log('[SocketClient] Cleared pending invoice timeout');
       }
       
       // Close checkout modal if it's open
       if (typeof window.closeCheckoutModal === 'function') {
         window.closeCheckoutModal();
+        console.log('[SocketClient] Closed checkout modal');
       }
       
       if (window.showMessage) window.showMessage('Redirecting to payment...', 'success');
       // Use setTimeout to ensure message is shown before redirect
       setTimeout(() => {
+        console.log('[SocketClient] 🚀 Redirecting to:', url);
         window.location.href = url;
       }, 100);
     } else {
-      console.error('[SocketClient] ❌ No invoice URL found in entry purchase response');
+      console.error('[SocketClient] ❌❌❌ No invoice URL found in entry purchase response ❌❌❌');
       console.error('[SocketClient] Data structure:', {
         hasInvoice: !!data.invoice,
         invoiceType: typeof data.invoice,
