@@ -1181,6 +1181,7 @@ window.SocketClient = (function() {
     requestInitialData,
     requestMyTransactions,
     changePage,
-    _getSocket: () => socket
+    _getSocket: () => socket,
+    ensurePurchaseListeners // Expose for manual re-registration when user comes back
   };
 })();

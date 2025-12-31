@@ -827,6 +827,51 @@
             // DOM already loaded, initialize immediately
             initializeSocketClient();
         }
+        
+        // CRITICAL: Re-ensure socket listeners when user comes back from payment page
+        // This fixes the issue where user goes back and tries to checkout again
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && window.SocketClient) {
+                // Page became visible (user came back)
+                console.log('[index.html] Page became visible - re-ensuring socket connection and listeners...');
+                
+                const socketInstance = window.SocketClient._getSocket ? window.SocketClient._getSocket() : null;
+                
+                if (socketInstance && socketInstance.connected) {
+                    // Socket is connected, ensure purchase listeners are active
+                    console.log('[index.html] Socket connected, ensuring purchase listeners...');
+                    if (window.SocketClient.ensurePurchaseListeners) {
+                        window.SocketClient.ensurePurchaseListeners();
+                    }
+                } else if (!socketInstance || !socketInstance.connected) {
+                    // Socket not connected, try to reconnect
+                    console.log('[index.html] Socket not connected, attempting to reconnect...');
+                    if (window.SocketClient.init) {
+                        window.SocketClient.init();
+                    }
+                }
+            }
+        });
+        
+        // Also listen for pageshow event (handles browser back/forward navigation)
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted && window.SocketClient) {
+                // Page was loaded from cache (browser back button)
+                console.log('[index.html] Page loaded from cache (browser back) - re-ensuring socket...');
+                
+                const socketInstance = window.SocketClient._getSocket ? window.SocketClient._getSocket() : null;
+                
+                if (socketInstance && socketInstance.connected) {
+                    if (window.SocketClient.ensurePurchaseListeners) {
+                        window.SocketClient.ensurePurchaseListeners();
+                    }
+                } else {
+                    if (window.SocketClient.init) {
+                        window.SocketClient.init();
+                    }
+                }
+            }
+        });
     </script>
     <script>
         // --- Mock Data & Config ---
@@ -2023,6 +2068,32 @@
                 console.log('[Checkout] Cleared previous invoice timeout before opening modal');
             }
             
+            // CRITICAL: Re-ensure socket connection and listeners when opening modal
+            // This fixes the issue where user goes back from payment page and tries again
+            if (window.SocketClient) {
+                console.log('[Checkout] Verifying socket connection before opening modal...');
+                const socketInstance = window.SocketClient._getSocket ? window.SocketClient._getSocket() : null;
+                
+                if (!socketInstance || !socketInstance.connected) {
+                    console.log('[Checkout] Socket not connected, attempting to reconnect...');
+                    if (window.SocketClient.init) {
+                        window.SocketClient.init();
+                        // Wait a moment for connection
+                        setTimeout(() => {
+                            if (window.SocketClient && window.SocketClient.ensurePurchaseListeners) {
+                                window.SocketClient.ensurePurchaseListeners();
+                            }
+                        }, 500);
+                    }
+                } else {
+                    // Socket is connected, but ensure listeners are registered
+                    console.log('[Checkout] Socket connected, ensuring purchase listeners are active...');
+                    if (window.SocketClient.ensurePurchaseListeners) {
+                        window.SocketClient.ensurePurchaseListeners();
+                    }
+                }
+            }
+            
             // Ensure modal is closed first to reset any state
             const modalEl = document.getElementById('checkout-modal');
             if (modalEl) {
@@ -2279,6 +2350,20 @@
                     return;
                 }
                 console.log('[Checkout] Socket verified ready. Socket ID:', socketCheck.id);
+                
+                // CRITICAL: One final check - ensure purchase listeners are registered right before emitting
+                // This is the last chance to fix listener issues before sending the purchase request
+                if (window.SocketClient && window.SocketClient.ensurePurchaseListeners) {
+                    console.log('[Checkout] Final check - ensuring purchase listeners before emit...');
+                    const listenersOk = window.SocketClient.ensurePurchaseListeners();
+                    if (!listenersOk) {
+                        console.error('[Checkout] ❌ Failed to ensure purchase listeners! Cannot proceed.');
+                        showMessage('Connection issue. Please try again.', 'error');
+                        closeCheckoutModal();
+                        return;
+                    }
+                    console.log('[Checkout] ✅ Purchase listeners verified active');
+                }
                 
                 if (isEntries) {
                     const payload = {
