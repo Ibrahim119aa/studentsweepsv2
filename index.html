@@ -2016,6 +2016,13 @@
         }
 
         function openCheckoutModal(itemName, itemPrice, quantity, isEntries, itemId) {
+            // Clear any pending timeout from previous attempt
+            if (window.pendingInvoiceTimeout) {
+                clearTimeout(window.pendingInvoiceTimeout);
+                window.pendingInvoiceTimeout = null;
+                console.log('[Checkout] Cleared previous invoice timeout before opening modal');
+            }
+            
             // Ensure modal is closed first to reset any state
             const modalEl = document.getElementById('checkout-modal');
             if (modalEl) {
@@ -2026,7 +2033,7 @@
             // Reset form first to ensure clean state
             resetCheckoutForm();
             
-            // Set fresh checkout state
+            // Set fresh checkout state for this purchase attempt
             checkoutState = {
                 itemName,
                 itemPrice: Number(itemPrice || 0),
@@ -2035,6 +2042,8 @@
                 prizeId: isEntries ? itemId : null,
                 donationId: !isEntries ? itemId : null
             };
+            
+            console.log('[Checkout] Opening checkout modal with fresh state:', checkoutState);
 
             // Load saved billing info (this will populate fields after reset)
             loadSavedBillingInfo();
@@ -2157,26 +2166,11 @@
                 el.classList.remove('is-visible');
             }
             
-            // Clear processing flag when modal closes
-            if (window.isProcessingPayment) {
-                window.isProcessingPayment = false;
-                console.log('[Checkout] Cleared payment processing flag (modal closed)');
-            }
-            
             // Clear any pending timeout
             if (window.pendingInvoiceTimeout) {
                 clearTimeout(window.pendingInvoiceTimeout);
                 window.pendingInvoiceTimeout = null;
-            }
-            
-            // Re-enable checkout button
-            const checkoutButton = document.querySelector('button[onclick*="finalizeCheckout"]');
-            if (checkoutButton) {
-                checkoutButton.disabled = false;
-                checkoutButton.style.opacity = '1';
-                checkoutButton.style.cursor = 'pointer';
-                const amountEl = document.getElementById('checkout-confirm-amount');
-                checkoutButton.innerHTML = `<span class="mr-1">Confirm Purchase & Pay</span> <span id="checkout-confirm-amount">${amountEl ? amountEl.textContent : '$0.00'}</span>`;
+                console.log('[Checkout] Cleared pending invoice timeout (modal closed)');
             }
             
             // Reset checkout state and form when closing
@@ -2188,6 +2182,8 @@
                 prizeId: null,
                 donationId: null
             };
+            
+            console.log('[Checkout] Modal closed, checkout state reset. Ready for next purchase attempt.');
             resetCheckoutForm();
         }
 
@@ -2202,17 +2198,8 @@
         }
 
         function finalizeCheckout() {
-            // Prevent multiple payment attempts
-            if (window.isProcessingPayment) {
-                console.log('[Checkout] Payment already processing, ignoring duplicate request');
-                return;
-            }
-            
             if (!window.SocketClient) { showMessage('Unable to connect'); return; }
             if (!isLoggedIn || !currentUser) { showMessage('Please sign in'); openAuthModal(); return; }
-            
-            // Set processing flag
-            window.isProcessingPayment = true;
 
             const billingFullName = document.getElementById('billing-fullname')?.value?.trim();
             const billingEmail = document.getElementById('billing-email')?.value?.trim();
@@ -2271,15 +2258,6 @@
             
             console.log('[Checkout] Socket connection verified. Socket ID:', socketInstance?.id, 'Connected:', socketInstance?.connected);
 
-            // Disable checkout button to prevent multiple clicks
-            const checkoutButton = document.querySelector('button[onclick*="finalizeCheckout"]');
-            if (checkoutButton) {
-                checkoutButton.disabled = true;
-                checkoutButton.style.opacity = '0.6';
-                checkoutButton.style.cursor = 'not-allowed';
-                checkoutButton.textContent = 'Processing...';
-            }
-            
             showMessage('Processing payment...');
             try {
                 // Store checkout state values before clearing
