@@ -896,7 +896,8 @@
         const formatTime = (num) => String(num).padStart(2, '0');
         function getFaces(unitElement) { const inner = unitElement.querySelector('.digit-card-inner'); const front = unitElement.querySelector('.front-face'); const back = unitElement.querySelector('.back-face'); const frontValue = front ? front.getAttribute('data-value') : '00'; return { unitElement, inner, front, back, frontValue }; }
         function updateUnit(unitElement, newValue) { const { unitElement: unit, front, back, frontValue } = getFaces(unitElement); if (!unit || newValue === frontValue) return; if (front && back) { back.textContent = newValue; back.setAttribute('data-value', newValue); unit.classList.add('flipping'); setTimeout(() => { front.textContent = newValue; front.setAttribute('data-value', newValue); unit.classList.remove('flipping'); }, 150); } }
-        function startCountdown(targetTime) { if (currentInterval) { clearInterval(currentInterval); currentInterval = null; } const daysEl = document.getElementById('days-unit'); if (!daysEl) return; const update = () => { const now = new Date().getTime(); const distance = targetTime - now; const hoursEl = document.getElementById('hours-unit'); const minutesEl = document.getElementById('minutes-unit'); const secondsEl = document.getElementById('seconds-unit'); const messageEl = document.getElementById('draw-message'); if (!daysEl || !hoursEl || !minutesEl || !secondsEl) { clearInterval(currentInterval); currentInterval = null; return; } if (distance < 0) { clearInterval(currentInterval); currentInterval = null; const timerEl = document.getElementById('countdown-timer'); if (timerEl) timerEl.innerHTML = ''; if (messageEl) messageEl.innerHTML = `<p class="text-xl font-bold text-red-500">DRAW IS CLOSED!</p>`; return; } const days = Math.floor(distance / (1000 * 60 * 60 * 24)); const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)); const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)); const seconds = Math.floor((distance % (1000 * 60)) / 1000); updateUnit(daysEl, formatTime(days)); updateUnit(hoursEl, formatTime(hours)); updateUnit(minutesEl, formatTime(minutes)); updateUnit(secondsEl, formatTime(seconds)); if (messageEl) messageEl.innerHTML = `<span class="text-lg font-bold text-gray-900">Ends ${new Date(targetTime).toLocaleDateString()}</span>`; }; currentInterval = setInterval(update, 1000); update(); }
+        function startCountdown(targetTime) { if (currentInterval) { clearInterval(currentInterval); currentInterval = null; } const daysEl = document.getElementById('days-unit'); if (!daysEl) return; const update = () => { const now = new Date().getTime(); const distance = targetTime - now; const hoursEl = document.getElementById('hours-unit'); const minutesEl = document.getElementById('minutes-unit'); const secondsEl = document.getElementById('seconds-unit'); const messageEl = document.getElementById('draw-message'); if (!daysEl || !hoursEl || !minutesEl || !secondsEl) { clearInterval(currentInterval); currentInterval = null; return; } if (distance < 0) { clearInterval(currentInterval); currentInterval = null; const timerEl = document.getElementById('countdown-timer'); if (timerEl) timerEl.innerHTML = ''; if (messageEl) messageEl.innerHTML = `<p class="text-xl font-bold text-red-500">DRAW IS CLOSED!</p>`; return; } const days = Math.floor(distance / (1000 * 60 * 60 * 24)); const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)); const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)); const seconds = Math.floor((distance % (1000 * 60)) / 1000); updateUnit(daysEl, formatTime(days)); updateUnit(hoursEl, formatTime(hours)); updateUnit(minutesEl, formatTime(minutes)); updateUnit(secondsEl, formatTime(seconds)); if (messageEl) messageEl.innerHTML = `<span class="text-lg font-bold text-gray-900">Ends ${new Date(targetTime).toLocaleDateString()}</span>`; }; 
+        currentInterval = setInterval(update, 1000); update(); }
 
         // --- HTML Rendering Functions ---
         function renderHomePage() {
@@ -1100,14 +1101,71 @@
                 previewImagesCount: (prize.previewImages || []).length,
                 specsCount: (prize.detailsSpecs || []).length
             });
-            const html = `<div class="space-y-12"><div class="pb-2"><h1 class="text-5xl font-extrabold">${prize.name}</h1><p class="text-xl text-gray-500 mt-1">${prize.shortDescription || ''}</p>${isPastPrize ? '<div class="mt-2 text-red-500 font-bold">This draw has closed.</div>' : ''}</div><div class="grid lg:grid-cols-12 gap-10"><div class="lg:col-span-7 space-y-8"><div class="rounded-xl overflow-hidden shadow-lg border"><img id="main-prize-image" src="${mainImage}" alt="${prize.name}" class="w-full h-96 object-cover" onerror="this.src='${FALLBACK_IMAGE}'" /></div><div class="grid grid-cols-6 gap-2">${previewImagesHtml || '<div class="text-gray-400">No preview images</div>'}</div><div class="grid md:grid-cols-2 gap-8 pt-4"><div><h3 class="text-2xl font-bold border-b pb-2">Details & Specs</h3><ul>${specList || '<li class="text-gray-500">No specs available</li>'}</ul><p class="text-sm text-gray-600 mt-4">${prize.detailedDescription || ''}</p></div></div></div><div class="lg:col-span-5 space-y-6"><div class="bg-white p-6 rounded-xl shadow-md border space-y-4 ${isPastPrize ? 'opacity-50' : ''}"><div id="draw-message" class="flex justify-center items-center"></div><div id="countdown-timer" class="grid grid-cols-4 gap-2 text-center">${['days', 'hours', 'minutes', 'seconds'].map((l, i) => `<div id="${l}-unit" class="flex flex-col items-center digit-card"><div class="w-full aspect-[2/1] relative digit-card-inner"><div class="digit-card-face front-face text-xl font-bold" data-value="00">00</div><div class="digit-card-face back-face text-xl font-bold" data-value="00">00</div></div><span class="mt-1 text-xs uppercase">${['Days', 'Hrs', 'Min', 'Sec'][i]}</span></div>`).join('')}</div><div class="mt-4"><div class="w-full bg-gray-200 rounded-full h-3"><div class="bg-accent h-3 rounded-full" style="width:${((prize.entries?.totalEntries || 0) / (prize.entries?.maxEntries || 1) * 100).toFixed(2)}%"></div></div><p class="text-xs text-center mt-2"><b>${(prize.entries?.totalEntries || 0).toLocaleString()}</b> of ${(prize.entries?.maxEntries || 1).toLocaleString()} sold</p></div></div>${!isPastPrize ? `<div class="space-y-4"><h3>Select Entries:</h3><div id="entry-options-container" class="grid grid-cols-5 gap-3">${entryButtons}</div><div class="p-3 bg-gray-100 rounded-lg flex justify-between items-center"><span class="font-semibold">Total:</span><span id="entry-total" class="text-3xl font-extrabold text-accent">£${(selectedEntryOption * entryPrice).toLocaleString()}</span></div><button type="button" onclick="handleEntryPurchase('${prize.name}', ${entryPrice}, false)" class="w-full bg-accent hover:bg-accent-dark text-white font-extrabold py-4 rounded-lg">ENTER NOW</button><p class="text-xs text-center flex items-center justify-center"><i data-lucide="lock" class="w-4 mr-1"></i>100% Secure Checkout</p></div>` : `<div class="p-6 bg-red-50 rounded-xl border border-red-300"><p class="text-center font-bold text-red-700">This sweepstake is closed.</p></div>`}</div></div></div>`;
+            const html = `<div class="space-y-12"><div class="pb-2"><h1 class="text-5xl font-extrabold">${prize.name}</h1><p class="text-xl text-gray-500 mt-1">${prize.shortDescription || ''}</p>${isPastPrize ? '<div class="mt-2 text-red-500 font-bold">This draw has closed.</div>' : ''}</div><div class="grid lg:grid-cols-12 gap-10"><div class="lg:col-span-7 space-y-8"><div class="rounded-xl overflow-hidden shadow-lg border"><img id="main-prize-image" src="${mainImage}" alt="${prize.name}" class="w-full h-96 object-cover" onerror="this.src='${FALLBACK_IMAGE}'" /></div><div class="grid grid-cols-6 gap-2">${previewImagesHtml || '<div class="text-gray-400">No preview images</div>'}</div><div class="grid md:grid-cols-2 gap-8 pt-4"><div><h3 class="text-2xl font-bold border-b pb-2">Details & Specs</h3><ul>${specList || '<li class="text-gray-500">No specs available</li>'}</ul><p class="text-sm text-gray-600 mt-4">${prize.detailedDescription || ''}</p></div></div></div><div class="lg:col-span-5 space-y-6"><div class="bg-white p-6 rounded-xl shadow-md border space-y-4 ${isPastPrize ? 'opacity-50' : ''}"><div id="draw-message" class="flex justify-center items-center"></div><div id="countdown-timer" class="grid grid-cols-4 gap-2 text-center">${['days', 'hours', 'minutes', 'seconds'].map((l, i) => `<div id="${l}-unit" class="flex flex-col items-center digit-card"><div class="w-full aspect-[2/1] relative digit-card-inner"><div class="digit-card-face front-face text-xl font-bold" data-value="00">00</div><div class="digit-card-face back-face text-xl font-bold" data-value="00">00</div></div><span class="mt-1 text-xs uppercase">${['Days', 'Hrs', 'Min', 'Sec'][i]}</span></div>`).join('')}</div><div class="mt-4"><div class="w-full bg-gray-200 rounded-full h-3"><div id="prize-progress-bar" class="bg-accent h-3 rounded-full transition-all duration-500" style="width:${((prize.entries?.totalEntries || 0) / (prize.entries?.maxEntries || 1) * 100).toFixed(2)}%"></div></div><p class="text-xs text-center mt-2"><b id="prize-sold-entries">${(prize.entries?.totalEntries || 0).toLocaleString()}</b> of <span id="prize-max-entries">${(prize.entries?.maxEntries || 1).toLocaleString()}</span> sold</p></div></div>${!isPastPrize ? `<div class="space-y-4"><h3>Select Entries:</h3><div id="entry-options-container" class="grid grid-cols-5 gap-3">${entryButtons}</div><div class="p-3 bg-gray-100 rounded-lg flex justify-between items-center"><span class="font-semibold">Total:</span><span id="entry-total" class="text-3xl font-extrabold text-accent">£${(selectedEntryOption * entryPrice).toLocaleString()}</span></div><button type="button" onclick="handleEntryPurchase('${prize.name}', ${entryPrice}, false)" class="w-full bg-accent hover:bg-accent-dark text-white font-extrabold py-4 rounded-lg">ENTER NOW</button><p class="text-xs text-center flex items-center justify-center"><i data-lucide="lock" class="w-4 mr-1"></i>100% Secure Checkout</p></div>` : `<div class="p-6 bg-red-50 rounded-xl border border-red-300"><p class="text-center font-bold text-red-700">This sweepstake is closed.</p></div>`}</div></div></div>`;
             mainContentEl.innerHTML = html;
+            
+            // Store current prize ID for real-time updates
+            if (prize._id) {
+                window.currentPrizeId = prize._id;
+            }
+            
             if (!isPastPrize && prize.drawTimestamp) {
                 window.selectEntryOption(selectedEntryOption, null);
                 startCountdown(new Date(prize.drawTimestamp).getTime());
             }
             lucide.createIcons();
         }
+        
+        // Function to update prize progress bar in real-time
+        window.updatePrizeProgressBar = function(prizeId, entriesAdded) {
+            // Only update if we're on the prize detail page and it's the current prize
+            if (window.currentPage !== 'detail' || !window.currentPrizeId) {
+                // Try to match by prize name if ID doesn't match
+                const currentPrize = (window.PRIZES || []).find(p => p._id === window.currentPrizeId);
+                if (!currentPrize) return;
+            }
+            
+            // Find the prize in window.PRIZES and update it
+            // Try to match by ID first, then by name
+            let prize = null;
+            let prizeIndex = -1;
+            
+            if (prizeId) {
+                prizeIndex = (window.PRIZES || []).findIndex(p => String(p._id) === String(prizeId) || String(p.id) === String(prizeId));
+            }
+            
+            // If not found by ID, try to find by current prize ID
+            if (prizeIndex === -1 && window.currentPrizeId) {
+                prizeIndex = (window.PRIZES || []).findIndex(p => String(p._id) === String(window.currentPrizeId) || String(p.id) === String(window.currentPrizeId));
+            }
+            
+            if (prizeIndex !== -1) {
+                prize = window.PRIZES[prizeIndex];
+            }
+            
+            if (prize && prize.entries) {
+                prize.entries.totalEntries = (prize.entries.totalEntries || 0) + entriesAdded;
+                
+                // Update the progress bar
+                const progressBar = document.getElementById('prize-progress-bar');
+                const soldEntriesEl = document.getElementById('prize-sold-entries');
+                const maxEntries = prize.entries.maxEntries || 1;
+                const totalEntries = prize.entries.totalEntries || 0;
+                
+                if (progressBar) {
+                    const percentage = Math.min((totalEntries / maxEntries) * 100, 100);
+                    progressBar.style.width = percentage.toFixed(2) + '%';
+                }
+                
+                if (soldEntriesEl) {
+                    soldEntriesEl.textContent = totalEntries.toLocaleString();
+                }
+                
+                console.log('[Prize Progress] Updated:', totalEntries, 'of', maxEntries, 'sold (+' + entriesAdded + ')');
+            } else {
+                console.log('[Prize Progress] Prize not found for update. PrizeId:', prizeId, 'CurrentPrizeId:', window.currentPrizeId);
+            }
+        };
         function renderAllPrizesPage() {
             if (currentInterval) clearInterval(currentInterval);
 
@@ -1824,7 +1882,7 @@
         function handleForgotPassword(event) { event.preventDefault(); closeAuthModal(); showMessage(`If an account exists, a reset link has been sent.`); }
         function handleSupportClick(event) { event.preventDefault(); toggleProfileDropdown(); showMessage(`For support, email us at <br><span class="font-semibold text-accent">support@sweepstackz.com</span>.`); }
 
-        function handleEntryPurchase(itemName, itemPrice, isDonation = false) {
+        function handleEntryPurchase(itemName, itemPrice, isDonation = false, prizeId = null) {
             if (!isLoggedIn) { showMessage(`Please sign in to purchase.`); openAuthModal(); return; }
 
             if (isDonation) {
@@ -1845,7 +1903,9 @@
                 }
                 openCheckoutModal(itemName, donationAmount, 1, false, currentDonationId);
             } else {
-                openCheckoutModal(itemName, itemPrice, selectedEntryOption, true, currentPrizeId);
+                // Use provided prizeId or fallback to currentPrizeId
+                const finalPrizeId = prizeId || currentPrizeId;
+                openCheckoutModal(itemName, itemPrice, selectedEntryOption, true, finalPrizeId);
             }
         }
 
@@ -2045,6 +2105,14 @@
                         }
                     };
                     window.SocketClient.emit('entries:purchase', payload);
+                    
+                    // Store prize ID and entry amount for real-time update
+                    if (checkoutState.prizeId) {
+                        window.pendingEntryPurchase = {
+                            prizeId: checkoutState.prizeId,
+                            amount: checkoutState.quantity
+                        };
+                    }
                 } else {
                     const payload = {
                         donationId: checkoutState.donationId,
@@ -2422,12 +2490,12 @@
         function renderProfilePage() {
             if (currentInterval) clearInterval(currentInterval);
             if (!isLoggedIn || !currentUser) { changePage('home'); openAuthModal(); return; }
-            
+
             // Only request transactions if they haven't been loaded yet and we're not already loading
             // Don't request on every render to avoid infinite loops
-            if ((!window.TRANSACTIONS || window.TRANSACTIONS.length === 0) && 
-                !window.TRANSACTIONS_LOADING && 
-                window.SocketClient && 
+            if ((!window.TRANSACTIONS || window.TRANSACTIONS.length === 0) &&
+                !window.TRANSACTIONS_LOADING &&
+                window.SocketClient &&
                 window.SocketClient.requestMyTransactions) {
                 window.TRANSACTIONS_LOADING = true;
                 window.SocketClient.requestMyTransactions();
@@ -2447,7 +2515,7 @@
             // User stats from backend (or calculated from transactions)
             const transactions = window.TRANSACTIONS || [];
             console.log('[Profile] Calculating stats from', transactions.length, 'transactions');
-            
+
             // Debug: Log first transaction structure
             if (transactions.length > 0) {
                 console.log('[Profile] Sample transaction structure:', {
@@ -2458,7 +2526,7 @@
                     donationAmount: transactions[0].donation?.amount
                 });
             }
-            
+
             const calculateTotalSpent = () => {
                 try {
                     let total = 0;
@@ -2470,7 +2538,7 @@
                                 if (amount > 0) console.log(`[Profile] Order ${index}: £${amount}`);
                             } else if (tx.category === 'donation' && tx.donation) {
                                 // First try the stored amount field, then fall back to invoice data
-                                amount = parseFloat(tx.donation.amount) || 
+                                amount = parseFloat(tx.donation.amount) ||
                                     parseFloat(tx.donation.invoiceData?.price_amount) ||
                                     parseFloat(tx.donation.invoiceData?.priceAmount) ||
                                     parseFloat(tx.donation.invoiceData?.amount) ||
@@ -2497,7 +2565,7 @@
                     return 0;
                 }
             };
-            
+
             const calculateTotalEntries = () => {
                 try {
                     let total = 0;
@@ -2524,7 +2592,7 @@
                     return 0;
                 }
             };
-            
+
             const calculateTotalOrders = () => {
                 try {
                     // Only count orders (not donations)
@@ -2538,7 +2606,7 @@
                     return 0;
                 }
             };
-            
+
             const calculatePrizesWon = () => {
                 try {
                     const wonCount = transactions.filter(tx => {
@@ -2552,14 +2620,14 @@
                     return 0;
                 }
             };
-            
+
             const userStats = _cu.stats || {
                 totalOrders: calculateTotalOrders(),
                 totalEntries: calculateTotalEntries(),
                 totalSpent: calculateTotalSpent(),
                 prizesWon: calculatePrizesWon()
             };
-            
+
             console.log('[Profile] Calculated stats:', userStats);
 
             const transactionsHtml = (window.TRANSACTIONS || []).map(tx => {

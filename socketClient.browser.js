@@ -701,6 +701,12 @@ window.SocketClient = (function() {
   }
 
   function onEntryPurchaseCreated(data) {
+    // Update prize entries count in real-time if we have pending purchase info
+    if (window.pendingEntryPurchase && window.updatePrizeProgressBar) {
+      const { prizeId, amount } = window.pendingEntryPurchase;
+      window.updatePrizeProgressBar(prizeId, amount);
+      window.pendingEntryPurchase = null; // Clear after update
+    }
     console.log('[SocketClient] Entry purchase created:', data.trxID);
     if (window.showMessage) window.showMessage('Order created: ' + data.trxID, 'success');
     setTimeout(() => requestMyTransactions(), 500);
