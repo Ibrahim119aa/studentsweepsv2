@@ -1387,10 +1387,7 @@
                                                 <td class="py-3 px-4 text-sm text-gray-600">
                                                     £${entriesSold * (p.entries?.entryPrice || 0)}</td>
                                                 <td class="py-3 px-4 text-sm text-center">
-                                                    ${entriesSold.toLocaleString()}/${maxEntries.toLocaleString()}
-
-                                                   ${entryPrice.toLocaleString()}
-                                                    
+                                                  ${entryPrice.toLocaleString()}/${maxEntries.toLocaleString()}                                                    
                                                     </td>
                                                 <td class="py-3 px-4 text-sm text-center">${p.drawTimestamp ? new Date(p.drawTimestamp).toLocaleDateString() : 'N/A'}</td>
                                                 <td class="py-3 px-4 text-right">
