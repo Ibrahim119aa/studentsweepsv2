@@ -61,6 +61,12 @@ window.SocketClient = (function() {
       return false;
     }
     
+    // Ensure purchase listeners are registered before emitting purchase events
+    // This fixes the issue where second purchase attempt doesn't receive invoice URL
+    if (event === 'entries:purchase' || event === 'donation:purchase') {
+      ensurePurchaseListeners();
+    }
+    
     if (!isConnected || !socket.connected) {
       console.warn(`[SocketClient] Not connected. Socket connected: ${socket.connected}, isConnected: ${isConnected}. Queueing emit: ${event}`);
       pendingEmits.push({ event, data });
@@ -203,6 +209,26 @@ window.SocketClient = (function() {
     return true;
   }
 
+  // Ensure purchase event listeners are always registered
+  function ensurePurchaseListeners() {
+    if (!socket) return;
+    
+    // Remove and re-register purchase listeners to ensure they're active
+    socket.removeAllListeners('entries:purchase:invoice');
+    socket.removeAllListeners('entries:purchase:created');
+    socket.removeAllListeners('donation:purchase:invoice');
+    socket.removeAllListeners('donation:purchase:created');
+    socket.removeAllListeners('donation:purchase:error');
+    
+    socket.on('entries:purchase:invoice', onEntryPurchaseInvoice);
+    socket.on('entries:purchase:created', onEntryPurchaseCreated);
+    socket.on('donation:purchase:invoice', onDonationPurchaseInvoice);
+    socket.on('donation:purchase:created', onDonationPurchaseCreated);
+    socket.on('donation:purchase:error', onDonationPurchaseError);
+    
+    console.log('[SocketClient] Purchase event listeners ensured');
+  }
+
   // Setup all socket event listeners
   function setupSocketListeners() {
     // Remove existing listeners first to prevent duplicates
@@ -285,12 +311,8 @@ window.SocketClient = (function() {
     socket.on('settings:get:response', onSettingsResponse);
     socket.on('settings:update', onSettingsUpdate);
 
-    // Purchase events
-    socket.on('entries:purchase:invoice', onEntryPurchaseInvoice);
-    socket.on('entries:purchase:created', onEntryPurchaseCreated);
-    socket.on('donation:purchase:invoice', onDonationPurchaseInvoice);
-    socket.on('donation:purchase:created', onDonationPurchaseCreated);
-    socket.on('donation:purchase:error', onDonationPurchaseError);
+    // Purchase events - use ensurePurchaseListeners to register
+    ensurePurchaseListeners();
     
     // Payment completion events - refresh transactions when payment is completed
     socket.on('payments:paid', onPaymentPaid);
@@ -313,21 +335,8 @@ window.SocketClient = (function() {
     console.log('✅ [SocketClient] Connection status: CONNECTED ✓');
     console.log('✅ [SocketClient] ========================================');
     
-    // Re-register purchase event listeners on reconnect to ensure they're active
-    // (Other listeners should persist, but purchase listeners are critical)
-    if (socket) {
-      socket.removeAllListeners('entries:purchase:invoice');
-      socket.removeAllListeners('entries:purchase:created');
-      socket.removeAllListeners('donation:purchase:invoice');
-      socket.removeAllListeners('donation:purchase:created');
-      socket.removeAllListeners('donation:purchase:error');
-      socket.on('entries:purchase:invoice', onEntryPurchaseInvoice);
-      socket.on('entries:purchase:created', onEntryPurchaseCreated);
-      socket.on('donation:purchase:invoice', onDonationPurchaseInvoice);
-      socket.on('donation:purchase:created', onDonationPurchaseCreated);
-      socket.on('donation:purchase:error', onDonationPurchaseError);
-      console.log('[SocketClient] Re-registered purchase event listeners on reconnect');
-    }
+    // Ensure purchase event listeners are registered on every connect
+    ensurePurchaseListeners();
     
     // Enable reconnection now that initial connection is successful
     if (socket && socket.io) {
