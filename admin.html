@@ -103,8 +103,7 @@
 
 <body class="min-h-screen bg-gray-50 font-sans antialiased flex text-gray-800">
     <!-- Mobile Menu Toggle Button (Right Side) -->
-    <button id="mobile-menu-toggle" 
-        onclick="toggleSidebar()"
+    <button id="mobile-menu-toggle" onclick="toggleSidebar()"
         class="fixed top-4 right-4 z-50 p-2 bg-white rounded-lg shadow-lg hover:bg-gray-100 transition-colors md:hidden">
         <svg id="menu-icon" class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -115,8 +114,7 @@
     </button>
 
     <!-- Sidebar Overlay (Mobile Only) -->
-    <div id="sidebar-overlay" 
-        onclick="closeSidebar()"
+    <div id="sidebar-overlay" onclick="closeSidebar()"
         class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden transition-opacity duration-300">
     </div>
 
@@ -133,7 +131,8 @@
             <!-- Close button for mobile -->
             <button onclick="closeSidebar()" class="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors">
                 <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
                 </svg>
             </button>
         </div>
@@ -207,16 +206,23 @@
     </div>
 
     <!-- Toast Notification Container -->
-    <div id="toast-container" style="position: fixed; top: 1rem; right: 1rem; z-index: 99999; pointer-events: none; display: flex; flex-direction: column; gap: 0.5rem; max-width: 400px;"></div>
+    <div id="toast-container"
+        style="position: fixed; top: 1rem; right: 1rem; z-index: 99999; pointer-events: none; display: flex; flex-direction: column; gap: 0.5rem; max-width: 400px;">
+    </div>
 
     <!-- Admin Login Modal -->
-    <div id="admin-login-modal" class="fixed inset-0 bg-black bg-opacity-50 z-[999999] flex items-center justify-center p-4" style="display: none;" onclick="if(event.target === this) hideLoginModal();">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-95 opacity-0" id="login-modal-content" onclick="event.stopPropagation();">
+    <div id="admin-login-modal"
+        class="fixed inset-0 bg-black bg-opacity-50 z-[999999] flex items-center justify-center p-4"
+        style="display: none;" onclick="if(event.target === this) hideLoginModal();">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-95 opacity-0"
+            id="login-modal-content" onclick="event.stopPropagation();">
             <div class="p-8">
                 <!-- Header -->
                 <div class="text-center mb-8">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full mb-4 shadow-lg">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <div
+                        class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full mb-4 shadow-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                            stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
                             <circle cx="12" cy="7" r="4"></circle>
                         </svg>
@@ -234,20 +240,18 @@
                         </label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path
+                                        d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z">
+                                    </path>
                                     <polyline points="22,6 12,13 2,6"></polyline>
                                 </svg>
                             </div>
-                            <input 
-                                type="email" 
-                                id="admin-email" 
-                                name="email" 
-                                required 
-                                autocomplete="email"
+                            <input type="email" id="admin-email" name="email" required autocomplete="email"
                                 class="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 outline-none text-gray-900 placeholder-gray-400"
-                                placeholder="admin@example.com"
-                            >
+                                placeholder="admin@example.com">
                         </div>
                     </div>
 
@@ -258,26 +262,22 @@
                         </label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
                                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                                     <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                                 </svg>
                             </div>
-                            <input 
-                                type="password" 
-                                id="admin-password" 
-                                name="password" 
-                                required 
+                            <input type="password" id="admin-password" name="password" required
                                 autocomplete="current-password"
                                 class="w-full pl-10 pr-12 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 outline-none text-gray-900 placeholder-gray-400"
-                                placeholder="Enter your password"
-                            >
-                            <button 
-                                type="button" 
-                                onclick="togglePasswordVisibility()" 
-                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
-                            >
-                                <svg id="password-eye" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                placeholder="Enter your password">
+                            <button type="button" onclick="togglePasswordVisibility()"
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
+                                <svg id="password-eye" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                     <circle cx="12" cy="12" r="3"></circle>
                                 </svg>
@@ -291,15 +291,16 @@
                     </div>
 
                     <!-- Submit Button -->
-                    <button 
-                        type="submit" 
-                        id="login-submit-btn"
-                        class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
+                    <button type="submit" id="login-submit-btn"
+                        class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
                         <span id="login-btn-text">Sign In</span>
-                        <svg id="login-btn-spinner" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <svg id="login-btn-spinner" class="hidden animate-spin h-5 w-5 text-white"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
                         </svg>
                     </button>
                 </form>
@@ -307,7 +308,9 @@
                 <!-- Footer -->
                 <div class="mt-6 text-center">
                     <p class="text-xs text-gray-500">
-                        <svg class="inline-block w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg class="inline-block w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                             <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                         </svg>
@@ -319,14 +322,17 @@
     </div>
 
     <!-- Winner Assignment Modal -->
-    <div id="winner-modal" class="fixed inset-0 bg-black bg-opacity-50 z-[999998] flex items-center justify-center p-4" style="display: none;" onclick="if(event.target === this) hideWinnerModal();">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl transform transition-all duration-300 scale-95 opacity-0 max-h-[90vh] overflow-y-auto" id="winner-modal-content" onclick="event.stopPropagation();">
+    <div id="winner-modal" class="fixed inset-0 bg-black bg-opacity-50 z-[999998] flex items-center justify-center p-4"
+        style="display: none;" onclick="if(event.target === this) hideWinnerModal();">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl transform transition-all duration-300 scale-95 opacity-0 max-h-[90vh] overflow-y-auto"
+            id="winner-modal-content" onclick="event.stopPropagation();">
             <div class="p-8">
                 <!-- Header -->
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold text-gray-900" id="winner-modal-title">Make Winner</h2>
                     <button onclick="hideWinnerModal()" class="text-gray-400 hover:text-gray-600 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="18" y1="6" x2="6" y2="18"></line>
                             <line x1="6" y1="6" x2="18" y2="18"></line>
                         </svg>
@@ -343,14 +349,9 @@
                         <label for="winner-image-url" class="block text-sm font-semibold text-gray-700 mb-2">
                             Winner Image URL *
                         </label>
-                        <input 
-                            type="url" 
-                            id="winner-image-url" 
-                            required 
-                            placeholder="https://example.com/image.jpg"
+                        <input type="url" id="winner-image-url" required placeholder="https://example.com/image.jpg"
                             oninput="updateImagePreview()"
-                            class="w-full p-3 rounded-lg border-2 border-gray-200 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 outline-none text-gray-900 placeholder-gray-400"
-                        />
+                            class="w-full p-3 rounded-lg border-2 border-gray-200 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 outline-none text-gray-900 placeholder-gray-400" />
                         <p class="text-xs text-gray-500 mt-1">Enter the URL of the winner's image</p>
                     </div>
 
@@ -358,7 +359,9 @@
                     <div id="image-preview-container" style="display: none;">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Image Preview</label>
                         <div class="border-2 border-gray-200 rounded-lg p-4 bg-gray-50">
-                            <img id="image-preview" src="" alt="Preview" class="max-w-full h-auto max-h-64 mx-auto rounded-lg shadow-md" onerror="this.style.display='none'; document.getElementById('image-preview-container').style.display='none';" />
+                            <img id="image-preview" src="" alt="Preview"
+                                class="max-w-full h-auto max-h-64 mx-auto rounded-lg shadow-md"
+                                onerror="this.style.display='none'; document.getElementById('image-preview-container').style.display='none';" />
                         </div>
                     </div>
 
@@ -368,20 +371,11 @@
                             Prize *
                         </label>
                         <div class="relative">
-                            <input 
-                                type="text" 
-                                id="winner-prize-search" 
-                                placeholder="Search prizes..."
+                            <input type="text" id="winner-prize-search" placeholder="Search prizes..."
                                 oninput="filterPrizes()"
-                                class="w-full p-3 rounded-lg border-2 border-gray-200 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 outline-none text-gray-900 placeholder-gray-400 mb-2"
-                            />
-                            <select 
-                                id="winner-prize-select" 
-                                required 
-                                size="5"
-                                onchange="showSelectedPrizeInfo()"
-                                class="w-full p-2 rounded-lg border-2 border-gray-200 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 outline-none text-gray-900"
-                            >
+                                class="w-full p-3 rounded-lg border-2 border-gray-200 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 outline-none text-gray-900 placeholder-gray-400 mb-2" />
+                            <select id="winner-prize-select" required size="5" onchange="showSelectedPrizeInfo()"
+                                class="w-full p-2 rounded-lg border-2 border-gray-200 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 outline-none text-gray-900">
                                 <!-- Options will be populated dynamically -->
                             </select>
                         </div>
@@ -389,15 +383,27 @@
                     </div>
 
                     <!-- Selected Prize Info Preview -->
-                    <div id="selected-prize-info" style="display: none;" class="mt-4 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border-2 border-green-200">
+                    <div id="selected-prize-info" style="display: none;"
+                        class="mt-4 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border-2 border-green-200">
                         <div class="flex items-start space-x-3">
                             <div class="flex-shrink-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-600">
-                                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5h3a2.5 2.5 0 0 1 0 5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5h-3a2.5 2.5 0 0 0 0 5H18"/><path d="M4 22h16"/><path d="M10 14V5"/><path d="M14 14V5"/><path d="M12 22v-8h-2.5l-.5 4"/><path d="M12 22v-8h2.5l.5 4"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" class="text-green-600">
+                                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5h3a2.5 2.5 0 0 1 0 5H6" />
+                                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5h-3a2.5 2.5 0 0 0 0 5H18" />
+                                    <path d="M4 22h16" />
+                                    <path d="M10 14V5" />
+                                    <path d="M14 14V5" />
+                                    <path d="M12 22v-8h-2.5l-.5 4" />
+                                    <path d="M12 22v-8h2.5l.5 4" />
+                                </svg>
                             </div>
                             <div class="flex-grow">
-                                <h4 class="text-sm font-bold text-gray-900 mb-1" id="selected-prize-title">Prize Title</h4>
-                                <p class="text-xs text-gray-600 leading-relaxed" id="selected-prize-description">Prize description will appear here when you select a prize.</p>
+                                <h4 class="text-sm font-bold text-gray-900 mb-1" id="selected-prize-title">Prize Title
+                                </h4>
+                                <p class="text-xs text-gray-600 leading-relaxed" id="selected-prize-description">Prize
+                                    description will appear here when you select a prize.</p>
                             </div>
                         </div>
                     </div>
@@ -407,30 +413,26 @@
                         <label for="winner-description" class="block text-sm font-semibold text-gray-700 mb-2">
                             Description (Optional)
                         </label>
-                        <textarea 
-                            id="winner-description" 
-                            rows="3"
-                            placeholder="Enter a description for this winner..."
-                            class="w-full p-3 rounded-lg border-2 border-gray-200 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 outline-none text-gray-900 placeholder-gray-400"
-                        ></textarea>
+                        <textarea id="winner-description" rows="3" placeholder="Enter a description for this winner..."
+                            class="w-full p-3 rounded-lg border-2 border-gray-200 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 outline-none text-gray-900 placeholder-gray-400"></textarea>
                     </div>
 
                     <!-- Actions -->
                     <div class="flex justify-end space-x-4 pt-4 border-t">
-                        <button 
-                            type="button" 
-                            onclick="hideWinnerModal()" 
-                            class="px-6 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400 transition"
-                        >
+                        <button type="button" onclick="hideWinnerModal()"
+                            class="px-6 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400 transition">
                             Cancel
                         </button>
-                        <button 
-                            type="submit" 
+                        <button type="submit"
                             class="px-6 py-2 text-white font-bold rounded-lg transition hover:opacity-90 flex items-center"
-                            id="winner-save-btn"
-                            style="background-color: #00C853"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                            id="winner-save-btn" style="background-color: #00C853">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="mr-2">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                                <polyline points="17 21 17 13 7 13 7 21" />
+                                <polyline points="7 3 7 8 15 8" />
+                            </svg>
                             <span>Save Winner</span>
                         </button>
                     </div>
@@ -565,7 +567,7 @@
                     console.error('[SOCKET] Error context:', error.context);
                 }
                 setState({ socketConnected: false });
-                
+
                 // Show error in login modal if it exists
                 if (authErrorMsgEl) {
                     authErrorMsgEl.textContent = `Connection error: ${error.message || 'Unable to connect to server'}`;
@@ -613,13 +615,13 @@
             // Auth events
             socket.on('admin:login:response', (response) => {
                 console.log('[SOCKET] admin:login:response received:', response);
-                
+
                 // Clear timeout if response received
                 if (window.loginTimeoutId) {
                     clearTimeout(window.loginTimeoutId);
                     window.loginTimeoutId = null;
                 }
-                
+
                 // Reset login button state
                 const submitBtn = document.getElementById('login-submit-btn');
                 const btnText = document.getElementById('login-btn-text');
@@ -629,7 +631,7 @@
                     if (btnText) btnText.textContent = 'Sign In';
                     if (btnSpinner) btnSpinner.classList.add('hidden');
                 }
-                
+
                 if (response?.success && response?.user?.isAdmin) {
                     const newToken = response.token;
                     setState({
@@ -639,11 +641,11 @@
                     });
                     localStorage.setItem('adminToken', newToken);
                     console.log('[SOCKET] Login successful, token set:', newToken?.substring(0, 20) + '...');
-                    
+
                     // Hide login modal and show success toast
                     hideLoginModal();
                     window.showToast('Login successful! Welcome back.', 'success');
-                    
+
                     // Attach token to socket auth and reconnect so handshake contains token
                     try {
                         if (socket) {
@@ -804,7 +806,7 @@
                     saveBtn.style.opacity = '1';
                     saveBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg><span>Save Winner</span>`;
                 }
-                
+
                 if (response?.success) {
                     window.showToast('Winner assigned successfully!', 'success');
                     loadUsersData();
@@ -824,7 +826,7 @@
                     saveBtn.style.opacity = '1';
                     saveBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg><span>Save Winner</span>`;
                 }
-                
+
                 if (response?.success) {
                     window.showToast('Winner updated successfully!', 'success');
                     loadUsersData();
@@ -953,7 +955,7 @@
         // --- Toast Notification System ---
         window.showToast = function (message, type = 'success') {
             console.log('[TOAST] Function called with:', { message, type });
-            
+
             // Ensure body exists
             if (!document.body) {
                 console.error('[TOAST] Document body not ready');
@@ -964,14 +966,14 @@
             try {
                 // Get or create toast container
                 let toastContainer = document.getElementById('toast-container');
-                
+
                 if (!toastContainer) {
                     console.log('[TOAST] Creating toast container');
                     toastContainer = document.createElement('div');
                     toastContainer.id = 'toast-container';
                     document.body.appendChild(toastContainer);
                 }
-                
+
                 // Ensure container is in body
                 if (toastContainer.parentElement !== document.body) {
                     console.log('[TOAST] Moving container to body');
@@ -1001,7 +1003,7 @@
 
                 const toast = document.createElement('div');
                 toast.id = toastId;
-                
+
                 // Set toast styles
                 Object.assign(toast.style, {
                     backgroundColor: bgColor,
@@ -1021,7 +1023,7 @@
                     transition: 'all 0.3s ease-in-out',
                     zIndex: '1000000'
                 });
-                
+
                 toast.innerHTML = `
                     <div style="flex-shrink: 0; display: flex; align-items: center; justify-content: center;">${icon}</div>
                     <p style="flex: 1; margin: 0; font-weight: 500; font-size: 14px; line-height: 1.5;">${message}</p>
@@ -1085,7 +1087,7 @@
             const sidebar = document.getElementById('sidebar');
             const toggleBtn = document.getElementById('mobile-menu-toggle');
             const overlay = document.getElementById('sidebar-overlay');
-            
+
             // Only handle on mobile
             if (window.innerWidth <= 768 && sidebar && sidebar.classList.contains('sidebar-open')) {
                 // If click is outside sidebar and not on toggle button
@@ -1377,12 +1379,19 @@
                     prizes.map(p => {
                         const entriesSold = p.entries?.totalEntries || 0;
                         const maxEntries = p.entries?.maxEntries || 0;
+                        const entryPrice = p.entries?.entryPrice || 0;
 
                         return `
                                             <tr key="${p._id}" class="hover:bg-gray-50">
                                                 <td class="py-3 px-4 text-sm font-medium text-gray-900">${p.name}</td>
-                                                <td class="py-3 px-4 text-sm text-gray-600">£${entriesSold * (p.entries?.entryPrice || 0)}</td>
-                                                <td class="py-3 px-4 text-sm text-center">${entriesSold.toLocaleString()}/${maxEntries.toLocaleString()}</td>
+                                                <td class="py-3 px-4 text-sm text-gray-600">
+                                                    £${entriesSold * (p.entries?.entryPrice || 0)}</td>
+                                                <td class="py-3 px-4 text-sm text-center">
+                                                    ${entriesSold.toLocaleString()}/${maxEntries.toLocaleString()}
+
+                                                   ${entryPrice.toLocaleDateString()}
+                                                    
+                                                    </td>
                                                 <td class="py-3 px-4 text-sm text-center">${p.drawTimestamp ? new Date(p.drawTimestamp).toLocaleDateString() : 'N/A'}</td>
                                                 <td class="py-3 px-4 text-right">
                                                     <div class="flex items-center justify-end space-x-2">
@@ -1494,7 +1503,7 @@
             const filteredUsers = users.filter(user => {
                 const winnerInfo = getUserWinnerInfo(user._id);
                 const isWinner = !!winnerInfo;
-                
+
                 // Filter by search term (name or email)
                 const searchTerm = (drawsFilter.search || '').toLowerCase().trim();
                 if (searchTerm) {
@@ -1502,11 +1511,11 @@
                     const emailMatch = (user.emailAddress || '').toLowerCase().includes(searchTerm);
                     if (!nameMatch && !emailMatch) return false;
                 }
-                
+
                 // Filter by status
                 if (drawsFilter.status === 'winner' && !isWinner) return false;
                 if (drawsFilter.status === 'regular' && isWinner) return false;
-                
+
                 return true;
             });
 
@@ -1596,10 +1605,10 @@
                                             ${user.emailAddress || 'N/A'}
                                         </td>
                                         <td class="py-3 px-4 text-center">
-                                            ${isWinner 
-                                                ? '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Winner</span>'
-                                                : '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600">Regular</span>'
-                                            }
+                                            ${isWinner
+                                ? '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Winner</span>'
+                                : '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600">Regular</span>'
+                            }
                                         </td>
                                         <td class="py-3 px-4 text-center text-sm text-gray-600">
                                             ${winnerInfo && winnerInfo.prize ? (winnerInfo.prize.name || 'N/A') : '-'}
@@ -1949,15 +1958,15 @@
         };
 
         // Sidebar toggle functions for mobile
-        window.toggleSidebar = function() {
+        window.toggleSidebar = function () {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
             const menuIcon = document.getElementById('menu-icon');
             const closeIcon = document.getElementById('close-icon');
-            
+
             if (sidebar && overlay) {
                 const isOpen = sidebar.classList.contains('sidebar-open');
-                
+
                 if (isOpen) {
                     sidebar.classList.remove('sidebar-open');
                     overlay.classList.remove('sidebar-overlay-open');
@@ -1972,12 +1981,12 @@
             }
         };
 
-        window.closeSidebar = function() {
+        window.closeSidebar = function () {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
             const menuIcon = document.getElementById('menu-icon');
             const closeIcon = document.getElementById('close-icon');
-            
+
             if (sidebar && overlay) {
                 sidebar.classList.remove('sidebar-open');
                 overlay.classList.remove('sidebar-overlay-open');
@@ -2105,14 +2114,14 @@
 
         let allPrizesForFilter = [];
 
-        window.handleMakeWinner = function(userId, winnerId) {
+        window.handleMakeWinner = function (userId, winnerId) {
             console.log('[handleMakeWinner] Called with userId:', userId, 'winnerId:', winnerId, 'type:', typeof winnerId);
-            
+
             // Handle string 'null' from onclick
             if (winnerId === 'null' || winnerId === null || winnerId === undefined) {
                 winnerId = null;
             }
-            
+
             const user = state.users.find(u => u._id === userId);
             if (!user) {
                 console.error('[handleMakeWinner] User not found:', userId);
@@ -2123,13 +2132,13 @@
             const winner = winnerId ? state.winners.find(w => w._id === winnerId) : null;
             const modal = document.getElementById('winner-modal');
             const modalContent = document.getElementById('winner-modal-content');
-            
+
             if (!modal || !modalContent) {
                 console.error('[handleMakeWinner] Modal elements not found!');
                 window.showToast('Modal not found. Please refresh the page.', 'error');
                 return;
             }
-            
+
             const title = document.getElementById('winner-modal-title');
             const userIdInput = document.getElementById('winner-user-id');
             const winnerIdInput = document.getElementById('winner-id');
@@ -2137,7 +2146,7 @@
             const descriptionInput = document.getElementById('winner-description');
             const prizeSelect = document.getElementById('winner-prize-select');
             const prizeSearch = document.getElementById('winner-prize-search');
-            
+
             if (!title || !userIdInput || !winnerIdInput || !imageUrlInput || !descriptionInput || !prizeSelect || !prizeSearch) {
                 console.error('[handleMakeWinner] Form elements not found!');
                 window.showToast('Form elements not found. Please refresh the page.', 'error');
@@ -2165,7 +2174,7 @@
             // Populate prizes dropdown
             allPrizesForFilter = state.prizes || [];
             populatePrizeSelect(allPrizesForFilter);
-            
+
             // Set selected prize if editing
             if (winner && winner.prize) {
                 const prizeId = winner.prize._id || winner.prize;
@@ -2206,7 +2215,7 @@
             }, 10);
         }
 
-        window.hideWinnerModal = function() {
+        window.hideWinnerModal = function () {
             const modal = document.getElementById('winner-modal');
             const modalContent = document.getElementById('winner-modal-content');
             modalContent.style.transform = 'scale(0.95)';
@@ -2216,7 +2225,7 @@
             }, 300);
         }
 
-        window.updateImagePreview = function() {
+        window.updateImagePreview = function () {
             const imageUrl = document.getElementById('winner-image-url').value;
             const previewContainer = document.getElementById('image-preview-container');
             const previewImg = document.getElementById('image-preview');
@@ -2230,7 +2239,7 @@
             }
         }
 
-        window.updateDonationImagePreview = function() {
+        window.updateDonationImagePreview = function () {
             const imageUrlInput = document.getElementById('donation-image-url');
             const previewContainer = document.getElementById('donation-image-preview-container');
             const previewImg = document.getElementById('donation-image-preview');
@@ -2252,7 +2261,7 @@
             const select = document.getElementById('winner-prize-select');
             const currentValue = select.value; // Save current selection
             select.innerHTML = '';
-            
+
             if (prizes.length === 0) {
                 const option = document.createElement('option');
                 option.value = '';
@@ -2287,10 +2296,10 @@
             }
         }
 
-        window.filterPrizes = function() {
+        window.filterPrizes = function () {
             const searchTerm = document.getElementById('winner-prize-search').value.toLowerCase();
             const select = document.getElementById('winner-prize-select');
-            
+
             if (!searchTerm) {
                 populatePrizeSelect(allPrizesForFilter);
                 // Show info for currently selected prize if any
@@ -2300,7 +2309,7 @@
                 return;
             }
 
-            const filtered = allPrizesForFilter.filter(prize => 
+            const filtered = allPrizesForFilter.filter(prize =>
                 prize.name.toLowerCase().includes(searchTerm)
             );
             populatePrizeSelect(filtered);
@@ -2310,7 +2319,7 @@
             }
         }
 
-        window.showSelectedPrizeInfo = function() {
+        window.showSelectedPrizeInfo = function () {
             const select = document.getElementById('winner-prize-select');
             const selectedPrizeId = select.value;
             const infoContainer = document.getElementById('selected-prize-info');
@@ -2324,7 +2333,7 @@
 
             // Find the selected prize in the prizes array
             const selectedPrize = state.prizes.find(p => p._id === selectedPrizeId);
-            
+
             if (selectedPrize) {
                 titleEl.textContent = selectedPrize.name || 'No title';
                 descriptionEl.textContent = selectedPrize.shortDescription || selectedPrize.detailedDescription || 'No description available';
@@ -2334,7 +2343,7 @@
             }
         }
 
-        window.handleUnassignWinner = function(winnerId, userName) {
+        window.handleUnassignWinner = function (winnerId, userName) {
             if (!confirm(`Are you sure you want to unassign ${userName} as a winner? This action cannot be undone.`)) {
                 return;
             }
@@ -2355,15 +2364,15 @@
                 // Remove existing listener if any
                 const newForm = winnerForm.cloneNode(true);
                 winnerForm.parentNode.replaceChild(newForm, winnerForm);
-                
+
                 newForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    
+
                     if (!socket) {
                         window.showToast('Socket not connected', 'error');
                         return;
                     }
-                    
+
                     const userId = document.getElementById('winner-user-id').value;
                     const winnerId = document.getElementById('winner-id').value;
                     const imageUrl = document.getElementById('winner-image-url').value;
@@ -2468,7 +2477,7 @@
                         if (response?.success) {
                             // Show success toast
                             window.showToast("Prize updated successfully!", 'success');
-                            
+
                             // Use requestAnimationFrame to ensure toast is rendered before any state changes
                             requestAnimationFrame(() => {
                                 requestAnimationFrame(() => {
@@ -2497,7 +2506,7 @@
                         if (response?.success) {
                             // Show success toast
                             window.showToast("Prize created successfully!", 'success');
-                            
+
                             // Use requestAnimationFrame to ensure toast is rendered before any state changes
                             requestAnimationFrame(() => {
                                 requestAnimationFrame(() => {
@@ -2710,14 +2719,14 @@
 
         // --- Draw Management Filter Functions ---
         let drawsFilterDebounceTimer = null;
-        
+
         // Handle search input - don't filter immediately, wait for user to stop typing
-        window.handleDrawsSearchInput = function(value) {
+        window.handleDrawsSearchInput = function (value) {
             // Clear existing timer
             if (drawsFilterDebounceTimer) {
                 clearTimeout(drawsFilterDebounceTimer);
             }
-            
+
             // Don't update state yet - wait for user to stop typing
             // Debounce the filtering by 500ms after user stops typing
             drawsFilterDebounceTimer = setTimeout(() => {
@@ -2728,15 +2737,15 @@
                         search: value
                     }
                 });
-                
+
                 // Only update the table rows, don't re-render the entire page
                 if (state.currentPage === 'draws') {
                     updateDrawsTableOnly();
                 }
             }, 500); // Wait 500ms after user stops typing before filtering
         };
-        
-        window.updateDrawsFilter = function(key, value) {
+
+        window.updateDrawsFilter = function (key, value) {
             // For status dropdown, update immediately (no debounce needed)
             if (key === 'status') {
                 setState({
@@ -2749,37 +2758,37 @@
             }
             // Note: search is handled separately by handleDrawsSearchInput
         };
-        
+
         // Function to update only the table rows without touching the input
         function updateDrawsTableOnly() {
             const { users, winners, drawsFilter } = state;
             const getUserWinnerInfo = (userId) => {
                 return winners.find(w => w.user && (w.user._id === userId || w.user === userId));
             };
-            
+
             // Filter users (same logic as renderDrawManagement)
             const filteredUsers = users.filter(user => {
                 const winnerInfo = getUserWinnerInfo(user._id);
                 const isWinner = !!winnerInfo;
-                
+
                 const searchTerm = (drawsFilter.search || '').toLowerCase().trim();
                 if (searchTerm) {
                     const nameMatch = (user.fullName || '').toLowerCase().includes(searchTerm);
                     const emailMatch = (user.emailAddress || '').toLowerCase().includes(searchTerm);
                     if (!nameMatch && !emailMatch) return false;
                 }
-                
+
                 if (drawsFilter.status === 'winner' && !isWinner) return false;
                 if (drawsFilter.status === 'regular' && isWinner) return false;
-                
+
                 return true;
             });
-            
+
             // Update only the table tbody
             const tbody = document.querySelector('table tbody');
             if (tbody) {
                 const primaryColor = state.settings.primaryColor || '#00C853';
-                tbody.innerHTML = filteredUsers.length === 0 
+                tbody.innerHTML = filteredUsers.length === 0
                     ? `<tr><td colSpan="5" class="py-6 text-center text-gray-500">${users.length === 0 ? 'No users found.' : 'No users match the current filters.'}</td></tr>`
                     : filteredUsers.map(user => {
                         const winnerInfo = getUserWinnerInfo(user._id);
@@ -2793,10 +2802,10 @@
                                     ${user.emailAddress || 'N/A'}
                                 </td>
                                 <td class="py-3 px-4 text-center">
-                                    ${isWinner 
-                                        ? '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Winner</span>'
-                                        : '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600">Regular</span>'
-                                    }
+                                    ${isWinner
+                                ? '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Winner</span>'
+                                : '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600">Regular</span>'
+                            }
                                 </td>
                                 <td class="py-3 px-4 text-center text-sm text-gray-600">
                                     ${winnerInfo && winnerInfo.prize ? (winnerInfo.prize.name || 'N/A') : '-'}
@@ -2826,7 +2835,7 @@
                             </tr>
                         `;
                     }).join('');
-                
+
                 // Update filter summary
                 const summaryEl = document.querySelector('.filter-summary-text');
                 if (summaryEl) {
@@ -2837,15 +2846,15 @@
             }
         }
 
-        window.clearDrawsFilters = function() {
+        window.clearDrawsFilters = function () {
             // Clear any pending debounce timer
             if (drawsFilterDebounceTimer) {
                 clearTimeout(drawsFilterDebounceTimer);
             }
-            
+
             // Reset local state
             drawsFilterLocalState = { search: '', status: 'all' };
-            
+
             setState({
                 drawsFilter: {
                     search: '',
@@ -2918,13 +2927,13 @@
         window.handleAdminLogin = function handleAdminLogin(event) {
             event.preventDefault();
             hideLoginError();
-            
+
             const emailInput = document.getElementById('admin-email');
             const passwordInput = document.getElementById('admin-password');
             const submitBtn = document.getElementById('login-submit-btn');
             const btnText = document.getElementById('login-btn-text');
             const btnSpinner = document.getElementById('login-btn-spinner');
-            
+
             const email = emailInput?.value?.trim().toLowerCase();
             const password = passwordInput?.value;
 
@@ -2955,7 +2964,7 @@
             console.log('[APP] Submitting admin login for email:', email);
             console.log('[APP] Socket connected:', socket.connected);
             console.log('[APP] Socket ID:', socket.id);
-            
+
             // Set a timeout to reset button if no response after 10 seconds
             const timeoutId = setTimeout(() => {
                 console.warn('[APP] Login timeout - no response received');
@@ -2966,16 +2975,16 @@
                 }
                 showLoginError('Login timeout. Please check your connection and try again.');
             }, 10000);
-            
+
             // Store timeout ID to clear it when response is received
             window.loginTimeoutId = timeoutId;
-            
+
             socket.emit('admin:login', { email: email, password: password });
         };
 
         // Update login response handler to use toast and hide modal
         const originalLoginHandler = socket?.on;
-        
+
         // --- App Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
             setupIconPlaceholders();
@@ -3036,7 +3045,7 @@
                         console.log('[APP] Waiting for socket connection...');
                     }
                 }, 500);
-                
+
                 // Fallback: show modal after 5 seconds even if not connected
                 setTimeout(() => {
                     clearInterval(checkConnection);
