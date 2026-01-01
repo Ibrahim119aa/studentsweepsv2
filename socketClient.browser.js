@@ -150,7 +150,7 @@ window.SocketClient = (function() {
       const emitResult = socket.emit(event, data);
       console.log(`[SocketClient] ✅ Emit sent. Result:`, emitResult !== false ? 'success' : 'failed');
       console.log(`[SocketClient] Emit timestamp:`, new Date().toISOString());
-      return true;
+    return true;
     } catch (err) {
       console.error(`[SocketClient] ❌ Error emitting ${event}:`, err);
       return false;

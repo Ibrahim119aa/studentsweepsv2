@@ -2113,7 +2113,7 @@
                 prizeId: isEntries ? itemId : null,
                 donationId: !isEntries ? itemId : null
             };
-            
+
             console.log('[Checkout] Opening checkout modal with fresh state:', checkoutState);
 
             // Load saved billing info (this will populate fields after reset)
@@ -2144,7 +2144,7 @@
             
             // Ensure modal is opened - use setTimeout to ensure DOM is ready
             setTimeout(() => {
-                const el = document.getElementById('checkout-modal');
+            const el = document.getElementById('checkout-modal');
                 if (el) {
                     el.classList.remove('is-hidden');
                     el.classList.add('is-visible');
@@ -2426,7 +2426,7 @@
                                     }
                                 } else {
                                     showMessage('Connection lost. Please refresh the page and try again.', 'error');
-                                    closeCheckoutModal();
+                closeCheckoutModal();
                                 }
                             }, 1000);
                             return; // Don't proceed with timeout setup if we're retrying

@@ -1415,6 +1415,7 @@
                 id: prizeToEdit?._id || '',
                 name: prizeToEdit?.name || '',
                 subtitle: prizeToEdit?.shortDescription || '',
+                longDescription: prizeToEdit?.detailedDescription || '',
                 drawDate: prizeToEdit?.drawTimestamp ? new Date(prizeToEdit.drawTimestamp).toISOString().substring(0, 16) : '',
                 entryPrice: prizeToEdit?.entries?.entryPrice || 10,
                 entries: prizeToEdit?.entries?.totalEntries || 0,
@@ -1444,7 +1445,12 @@
                         
                         <div class="grid md:grid-cols-2 gap-6">
                             <div><label class="block text-sm font-medium mb-1">Prize Name *</label><input type="text" name="name" value="${f.name}" required class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300"/></div>
-                            <div><label class="block text-sm font-medium mb-1">Subtitle / Short Description</label><input type="text" name="subtitle" value="${f.subtitle}" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300"/></div>
+                            <div><label class="block text-sm font-medium mb-1">Subtitle / Short Description</label><input type="text" name="subtitle" value="${f.subtitle}" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300" placeholder="Brief description shown in prize cards"/></div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Long Description</label>
+                            <textarea name="longDescription" rows="8" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300" placeholder="Detailed description shown on prize detail page">${f.longDescription}</textarea>
+                            <p class="text-xs text-gray-500 mt-1">This will be displayed in the "Details & Specs" section on the public prize detail page.</p>
                         </div>
                         <div class="grid md:grid-cols-2 gap-6">
                             <div><label class="block text-sm font-medium mb-1">Draw Date *</label><input type="datetime-local" name="drawDate" value="${f.drawDate}" required class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300"/></div>
@@ -2456,8 +2462,8 @@
 
                 const prizeData = {
                     name: formData.get('name'),
-                    shortDescription: formData.get('subtitle'),
-                    detailedDescription: formData.get('subtitle'),
+                    shortDescription: formData.get('subtitle') || '',
+                    detailedDescription: formData.get('longDescription') || '',
                     drawTimestamp: new Date(formData.get('drawDate')),
                     entries: {
                         entryPrice: parseInt(formData.get('entryPrice')) || 1,
